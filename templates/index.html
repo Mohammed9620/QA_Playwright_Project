@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QA Automation Engine — Dashboard</title>
+  <meta name="description"
+    content="A professional QA automation dashboard to run Playwright & pytest scans against any target URL with real-time progress tracking.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ════════════════════════════════════════════════════════════
+       RESET & DESIGN TOKENS
+       ════════════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root,
+    [data-theme="dark"] {
+      --bg-primary:     #0d1117;
+      --bg-secondary:   #161b22;
+      --bg-tertiary:    #1c2128;
+      --bg-elevated:    #21262d;
+      --border-default: #30363d;
+      --border-muted:   #21262d;
+      --text-primary:   #e6edf3;
+      --text-secondary: #8b949e;
+      --text-tertiary:  #6e7681;
+      --accent-blue:    #58a6ff;
+      --accent-purple:  #bc8cff;
+      --success:        #3fb950;
+      --success-muted:  rgba(63,185,80,0.15);
+      --danger:         #f85149;
+      --danger-muted:   rgba(248,81,73,0.15);
+      --warning:        #d29922;
+      --warning-muted:  rgba(210,153,34,0.15);
+      --info-muted:     rgba(88,166,255,0.12);
+      --overlay:        rgba(0,0,0,0.5);
+      --font:           'Inter', system-ui, -apple-system, sans-serif;
+      --mono:           'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+      --radius-sm:      4px;
+      --radius-md:      6px;
+      --transition:     0.2s ease;
+      color-scheme: dark;
+    }
+
+    [data-theme="light"] {
+      --bg-primary:     #ffffff;
+      --bg-secondary:   #f6f8fa;
+      --bg-tertiary:    #eaeef2;
+      --bg-elevated:    #d1d9e0;
+      --border-default: #d1d9e0;
+      --border-muted:   #eaeef2;
+      --text-primary:   #1f2328;
+      --text-secondary: #636c76;
+      --text-tertiary:  #8b949e;
+      --accent-blue:    #0969da;
+      --accent-purple:  #8250df;
+      --success:        #1a7f37;
+      --success-muted:  rgba(26,127,55,0.12);
+      --danger:         #cf222e;
+      --danger-muted:   rgba(207,34,46,0.12);
+      --warning:        #9a6700;
+      --warning-muted:  rgba(154,103,0,0.12);
+      --info-muted:     rgba(9,105,218,0.1);
+      --overlay:        rgba(0,0,0,0.2);
+      color-scheme: light;
+    }
+
+    html { height: 100%; }
+    body {
+      font-family: var(--font);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-size: 14px;
+      line-height: 1.5;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       TOP BAR
+       ════════════════════════════════════════════════════════════ */
+    .topbar {
+      height: 48px;
+      min-height: 48px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-default);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      z-index: 100;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+    .topbar-brand svg { flex-shrink: 0; }
+    .topbar-version {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      padding: 1px 6px;
+      border-radius: 10px;
+      letter-spacing: 0.02em;
+    }
+    .topbar-spacer { flex: 1; }
+    .topbar-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-tertiary);
+      transition: background 0.3s;
+    }
+    .status-dot.active { background: var(--success); }
+    .status-dot.running {
+      background: var(--warning);
+      animation: pulse-dot 1.5s ease-in-out infinite;
+    }
+    .theme-toggle {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      color: var(--text-secondary);
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      transition: all var(--transition);
+      padding: 0;
+      line-height: 1;
+    }
+    .theme-toggle:hover {
+      color: var(--text-primary);
+      border-color: var(--text-tertiary);
+      background: var(--bg-elevated);
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       MAIN LAYOUT — 3 PANES (flexbox for splitter support)
+       ════════════════════════════════════════════════════════════ */
+    .main-layout {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+    .sidebar { width: 248px; min-width: 248px; flex-shrink: 0; }
+    .viewport { flex: 1; min-width: 320px; }
+    .log-panel { width: 380px; min-width: 200px; max-width: 700px; flex-shrink: 0; }
+
+    /* ── Draggable Splitter ── */
+    .splitter {
+      width: 5px;
+      min-width: 5px;
+      cursor: col-resize;
+      background: var(--border-default);
+      position: relative;
+      z-index: 10;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .splitter:hover,
+    .splitter.dragging {
+      background: var(--accent-blue);
+    }
+    .splitter::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 3px;
+      height: 32px;
+      border-radius: 2px;
+      background: var(--text-tertiary);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .splitter:hover::after,
+    .splitter.dragging::after {
+      opacity: 0.7;
+    }
+
+    /* ────────────────── LEFT SIDEBAR ────────────────── */
+    .sidebar {
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-default);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .sidebar-header {
+      padding: 16px 16px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+    }
+    .suite-list {
+      list-style: none;
+      padding: 0 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .suite-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+      transition: all var(--transition);
+      position: relative;
+      user-select: none;
+    }
+    .suite-item:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    .suite-item.active {
+      background: var(--info-muted);
+      color: var(--accent-blue);
+      border-color: rgba(88,166,255,0.2);
+    }
+    [data-theme="light"] .suite-item.active {
+      border-color: rgba(9,105,218,0.25);
+    }
+    .suite-item.passed {
+      color: var(--success);
+    }
+    .suite-item.failed {
+      color: var(--danger);
+    }
+    .suite-item.running {
+      color: var(--warning);
+    }
+    .suite-icon {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .suite-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+    .suite-label { flex: 1; }
+    .suite-count {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      background: var(--bg-tertiary);
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-family: var(--mono);
+    }
+    .suite-status-icon {
+      font-size: 12px;
+      flex-shrink: 0;
+      width: 16px;
+      text-align: center;
+    }
+
+    /* Full scan toggle */
+    .sidebar-divider {
+      height: 1px;
+      background: var(--border-default);
+      margin: 8px 16px;
+    }
+    .full-scan-item {
+      margin: 0 8px 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+      transition: all var(--transition);
+      user-select: none;
+    }
+    .full-scan-item:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    .full-scan-item.active {
+      background: var(--info-muted);
+      color: var(--accent-blue);
+      border-color: rgba(88,166,255,0.2);
+    }
+
+    /* Sidebar footer */
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 12px 16px;
+      border-top: 1px solid var(--border-default);
+      font-size: 11px;
+      color: var(--text-tertiary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ────────────────── CENTER VIEWPORT ────────────────── */
+    .viewport {
+      background: var(--bg-primary);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      transition: background var(--transition);
+    }
+    .viewport-inner {
+      max-width: 640px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 24px;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+    }
+    .viewport-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+    .viewport-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    /* Config form */
+    .config-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 24px;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .config-section-title {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .config-section-title svg {
+      width: 14px;
+      height: 14px;
+      color: var(--text-tertiary);
+    }
+    .field {
+      margin-bottom: 16px;
+    }
+    .field:last-of-type {
+      margin-bottom: 0;
+    }
+    .field-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    .field-input {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: var(--mono);
+      font-size: 13px;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .field-input::placeholder {
+      color: var(--text-tertiary);
+      font-family: var(--mono);
+    }
+    .field-input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 2px rgba(88,166,255,0.2);
+    }
+    [data-theme="light"] .field-input:focus {
+      box-shadow: 0 0 0 2px rgba(9,105,218,0.2);
+    }
+    .field-select {
+      width: 100%;
+      padding: 8px 32px 8px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: var(--font);
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%238b949e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .field-select:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 2px rgba(88,166,255,0.2);
+    }
+    .field-select option {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    .field-hint {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-top: 6px;
+      line-height: 1.4;
+      min-height: 17px;
+    }
+
+    /* ── Strategy Toggle Cards ── */
+    .strategy-group {
+      margin-bottom: 16px;
+    }
+    .strategy-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .strategy-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .strategy-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 10px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition);
+      text-align: center;
+      user-select: none;
+    }
+    .strategy-card:hover {
+      border-color: var(--text-tertiary);
+    }
+    .strategy-card.selected {
+      border-color: var(--accent-blue);
+      background: var(--info-muted);
+    }
+    .strategy-card input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .strategy-card-icon {
+      width: 20px;
+      height: 20px;
+      color: var(--text-tertiary);
+      transition: color var(--transition);
+    }
+    .strategy-card.selected .strategy-card-icon {
+      color: var(--accent-blue);
+    }
+    .strategy-card-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .strategy-card-desc {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      line-height: 1.3;
+    }
+
+    /* ── Auth Fields (animated reveal) ── */
+    .auth-fields {
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height 0.35s ease, opacity 0.25s ease, margin 0.35s ease;
+      margin-top: 0;
+    }
+    .auth-fields.visible {
+      max-height: 500px;
+      opacity: 1;
+      margin-top: 16px;
+    }
+    .auth-fields-inner {
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      background: var(--bg-tertiary);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .auth-fields-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .auth-fields-title svg {
+      width: 12px;
+      height: 12px;
+    }
+    .auth-field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .auth-field-row .field {
+      margin-bottom: 0;
+    }
+    .field-input-sm {
+      width: 100%;
+      padding: 7px 10px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: var(--mono);
+      font-size: 12px;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .field-input-sm::placeholder {
+      color: var(--text-tertiary);
+      font-family: var(--mono);
+    }
+    .field-input-sm:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 2px rgba(88,166,255,0.2);
+    }
+    .field-label-sm {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    /* ── Timeline Duration Badge ── */
+    .timeline-duration {
+      font-size: 11px;
+      font-weight: 500;
+      font-family: var(--mono);
+      color: var(--text-tertiary);
+      margin-left: 6px;
+      white-space: nowrap;
+    }
+
+    /* Error banner */
+    .error-banner {
+      display: none;
+      align-items: flex-start;
+      gap: 8px;
+      background: var(--danger-muted);
+      border: 1px solid rgba(248,81,73,0.4);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--danger);
+      line-height: 1.4;
+    }
+    .error-banner.visible { display: flex; }
+    .error-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+    /* Run button */
+    .btn-run {
+      width: 100%;
+      padding: 10px 16px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      background: var(--success);
+      color: #ffffff;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .btn-run:hover:not(:disabled) {
+      filter: brightness(1.1);
+    }
+    .btn-run:active:not(:disabled) {
+      filter: brightness(0.95);
+    }
+    .btn-run:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .btn-run.testing {
+      background: var(--warning);
+    }
+    .btn-run .btn-spinner {
+      display: none;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .btn-run.testing .btn-spinner { display: block; }
+
+    /* ── Timeline Section ── */
+    .timeline-section {
+      display: none;
+      margin-top: 0;
+    }
+    .timeline-section.visible { display: block; }
+    .timeline-header {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .timeline {
+      position: relative;
+      padding-left: 24px;
+    }
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 7px;
+      top: 4px;
+      bottom: 4px;
+      width: 2px;
+      background: var(--border-default);
+      border-radius: 1px;
+    }
+    .timeline-item {
+      position: relative;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      transition: all 0.3s;
+    }
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: -21px;
+      top: 14px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--bg-elevated);
+      border: 2px solid var(--border-default);
+      transition: all 0.3s;
+    }
+    .timeline-item.waiting::before {
+      background: var(--bg-elevated);
+      border-color: var(--border-default);
+    }
+    .timeline-item.running {
+      border-color: rgba(210,153,34,0.4);
+      background: var(--warning-muted);
+    }
+    .timeline-item.running::before {
+      background: var(--warning);
+      border-color: var(--warning);
+      box-shadow: 0 0 6px rgba(210,153,34,0.5);
+    }
+    .timeline-item.passed {
+      border-color: rgba(63,185,80,0.3);
+    }
+    .timeline-item.passed::before {
+      background: var(--success);
+      border-color: var(--success);
+    }
+    .timeline-item.failed {
+      border-color: rgba(248,81,73,0.3);
+    }
+    .timeline-item.failed::before {
+      background: var(--danger);
+      border-color: var(--danger);
+    }
+    .timeline-item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .timeline-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    .timeline-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .timeline-badge.waiting {
+      background: var(--bg-tertiary);
+      color: var(--text-tertiary);
+    }
+    .timeline-badge.running {
+      background: var(--warning-muted);
+      color: var(--warning);
+    }
+    .timeline-badge.passed {
+      background: var(--success-muted);
+      color: var(--success);
+    }
+    .timeline-badge.failed {
+      background: var(--danger-muted);
+      color: var(--danger);
+    }
+    .timeline-detail {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+      font-family: var(--mono);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .timeline-detail-stats {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ── Completion Summary ── */
+    .completion-section {
+      display: none;
+      margin-top: 24px;
+    }
+    .completion-section.visible { display: block; }
+    .completion-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      text-align: center;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .completion-status {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .completion-status.ok { color: var(--success); }
+    .completion-status.warn { color: var(--danger); }
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .stat-box {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      padding: 12px 8px;
+      text-align: center;
+    }
+    .stat-num {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: var(--mono);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .stat-num.total { color: var(--accent-blue); }
+    .stat-num.passed { color: var(--success); }
+    .stat-num.failed { color: var(--danger); }
+    .stat-num.errors { color: var(--warning); }
+    .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+    /* Pass rate bar */
+    .pass-rate-wrap { margin-bottom: 20px; }
+    .pass-rate-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .pass-rate-track {
+      height: 6px;
+      background: var(--bg-tertiary);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .pass-rate-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    }
+    .pass-rate-fill.good { background: var(--success); }
+    .pass-rate-fill.bad { background: var(--danger); }
+
+    .completion-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-action {
+      flex: 1;
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      border: 1px solid var(--border-default);
+      transition: all var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-action:hover { border-color: var(--text-tertiary); }
+    .btn-action.primary {
+      background: var(--accent-blue);
+      color: #fff;
+      border-color: transparent;
+    }
+    .btn-action.primary:hover { filter: brightness(1.1); }
+    .btn-action.secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    .btn-action.ghost {
+      background: transparent;
+      color: var(--text-secondary);
+    }
+
+    /* ────────────────── RIGHT PANEL (Execution Logs) ────────────────── */
+    .log-panel {
+      background: var(--bg-secondary);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .log-panel-header {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-default);
+      gap: 8px;
+      min-height: 44px;
+    }
+    .log-panel-title {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .log-panel-title svg {
+      width: 14px;
+      height: 14px;
+      color: var(--text-tertiary);
+    }
+    .log-count {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      background: var(--bg-tertiary);
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-family: var(--mono);
+    }
+    .log-clear-btn {
+      background: none;
+      border: 1px solid var(--border-default);
+      color: var(--text-tertiary);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-family: var(--font);
+      transition: all var(--transition);
+    }
+    .log-clear-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--text-tertiary);
+    }
+    .log-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .log-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-tertiary);
+      font-size: 13px;
+      font-family: var(--font);
+      gap: 8px;
+      padding: 24px;
+      text-align: center;
+    }
+    .log-empty svg {
+      width: 32px;
+      height: 32px;
+      color: var(--border-default);
+    }
+    .log-line {
+      display: flex;
+      gap: 0;
+      padding: 1px 12px 1px 16px;
+      transition: background 0.1s;
+      align-items: flex-start;
+    }
+    .log-line:hover {
+      background: var(--bg-tertiary);
+    }
+    .log-timestamp {
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+      width: 90px;
+      font-size: 11px;
+      padding-top: 1px;
+      user-select: none;
+    }
+    .log-icon {
+      flex-shrink: 0;
+      width: 18px;
+      font-size: 10px;
+      padding-top: 2px;
+      user-select: none;
+    }
+    .log-text {
+      flex: 1;
+      min-width: 0;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      color: var(--text-secondary);
+    }
+    /* Log level colors */
+    .log-line.level-info .log-icon { color: var(--accent-blue); }
+    .log-line.level-info .log-text { color: var(--text-secondary); }
+    .log-line.level-pass .log-icon { color: var(--success); }
+    .log-line.level-pass .log-text { color: var(--success); }
+    .log-line.level-warn .log-icon { color: var(--warning); }
+    .log-line.level-warn .log-text { color: var(--warning); }
+    .log-line.level-fail .log-icon,
+    .log-line.level-error .log-icon { color: var(--danger); }
+    .log-line.level-fail .log-text,
+    .log-line.level-error .log-text { color: var(--danger); }
+    .log-line.level-pytest .log-text { color: var(--text-tertiary); }
+    .log-line.level-pytest .log-icon { color: var(--text-tertiary); }
+
+    /* File separator in logs */
+    .log-file-sep {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px 6px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: var(--text-tertiary);
+      font-family: var(--font);
+      text-transform: uppercase;
+    }
+    .log-file-sep::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border-default);
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       FOOTER STATUS BAR
+       ════════════════════════════════════════════════════════════ */
+    .footer-bar {
+      height: 28px;
+      min-height: 28px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-default);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      gap: 12px;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .footer-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .footer-spacer { flex: 1; }
+    .footer-timer {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       ANIMATIONS
+       ════════════════════════════════════════════════════════════ */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       SCROLLBAR STYLING
+       ════════════════════════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-default);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-tertiary);
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       RESPONSIVE — collapse sidebar & log panel
+       ════════════════════════════════════════════════════════════ */
+    @media (max-width: 1100px) {
+      .sidebar { width: 200px; min-width: 200px; }
+      .log-panel { width: 280px; }
+    }
+    @media (max-width: 860px) {
+      .main-layout {
+        flex-direction: column;
+      }
+      .sidebar { display: none; }
+      .splitter { display: none; }
+      .viewport { min-width: 0; }
+      .log-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0;
+        border-top: 1px solid var(--border-default);
+        max-height: 280px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ════════ TOP BAR ════════ -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+      QA Automation Engine
+    </div>
+    <span class="topbar-version">v1.0</span>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-status" id="topbar-status">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text">Ready</span>
+    </div>
+    <button class="theme-toggle" id="theme-toggle" title="Toggle theme" aria-label="Toggle dark/light theme">
+      <span id="theme-icon">☀️</span>
+    </button>
+  </header>
+
+  <!-- ════════ MAIN 3-PANE LAYOUT ════════ -->
+  <div class="main-layout">
+
+    <!-- ──── LEFT SIDEBAR ──── -->
+    <nav class="sidebar" aria-label="Test suites">
+      <div class="sidebar-header">Test Suites</div>
+      <ul class="suite-list" id="suite-list">
+        <li class="suite-item active" data-scan="login" id="suite-login">
+          <span class="suite-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          </span>
+          <span class="suite-label">Login Test</span>
+          <span class="suite-count">2</span>
+          <span class="suite-status-icon" id="status-login"></span>
+        </li>
+        <li class="suite-item" data-scan="bruteforce" id="suite-bruteforce">
+          <span class="suite-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          </span>
+          <span class="suite-label">Credential Probe</span>
+          <span class="suite-count">1</span>
+          <span class="suite-status-icon" id="status-bruteforce"></span>
+        </li>
+        <li class="suite-item" data-scan="api" id="suite-api">
+          <span class="suite-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </span>
+          <span class="suite-label">API Health</span>
+          <span class="suite-count">2</span>
+          <span class="suite-status-icon" id="status-api"></span>
+        </li>
+        <li class="suite-item" data-scan="auth" id="suite-auth">
+          <span class="suite-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </span>
+          <span class="suite-label">Auth Check</span>
+          <span class="suite-count">3</span>
+          <span class="suite-status-icon" id="status-auth"></span>
+        </li>
+      </ul>
+      <div class="sidebar-divider"></div>
+      <div class="full-scan-item" data-scan="full" id="suite-full">
+        <span class="suite-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20 14.5 14.5 0 000-20"/><path d="M2 12h20"/></svg>
+        </span>
+        <span class="suite-label">Full Scan</span>
+      </div>
+      <div class="sidebar-footer">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m8.66-13l-5.2 3m-7 4l-5.2 3m14.4 0l-5.2-3m-7-4L3.34 8"/></svg>
+        Playwright + pytest
+      </div>
+    </nav>
+
+    <!-- ──── CENTER VIEWPORT ──── -->
+    <main class="viewport">
+      <div class="viewport-inner">
+        <h1 class="viewport-title">Configure Scan</h1>
+        <p class="viewport-subtitle">Set up target URL and scan parameters, then execute.</p>
+
+        <!-- Config Form -->
+        <div class="config-section">
+          <div class="config-section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            Configuration
+          </div>
+
+          <form id="scan-form" novalidate>
+            <div class="field">
+              <label class="field-label" for="url">Target URL</label>
+              <input class="field-input" type="text" id="url" name="url" placeholder="https://example.com" autocomplete="off" spellcheck="false" required>
+            </div>
+
+            <!-- Strategy Toggle -->
+            <div class="strategy-group">
+              <span class="strategy-label">Scan Strategy</span>
+              <div class="strategy-cards">
+                <label class="strategy-card selected" id="card-external">
+                  <input type="radio" name="scan_strategy" value="external" checked>
+                  <svg class="strategy-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                  <span class="strategy-card-title">External Scan</span>
+                  <span class="strategy-card-desc">Black-box. URL only.</span>
+                </label>
+                <label class="strategy-card" id="card-authenticated">
+                  <input type="radio" name="scan_strategy" value="authenticated">
+                  <svg class="strategy-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                  <span class="strategy-card-title">Authenticated Scan</span>
+                  <span class="strategy-card-desc">Requires credentials.</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Auth Credential Fields (hidden by default, animated reveal) -->
+            <div class="auth-fields" id="auth-fields">
+              <div class="auth-fields-inner">
+                <div class="auth-fields-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  Authentication Credentials
+                </div>
+                <div class="auth-field-row">
+                  <div class="field">
+                    <label class="field-label-sm" for="auth-username">Username</label>
+                    <input class="field-input-sm" type="text" id="auth-username" placeholder="admin" autocomplete="off">
+                  </div>
+                  <div class="field">
+                    <label class="field-label-sm" for="auth-password">Password</label>
+                    <input class="field-input-sm" type="password" id="auth-password" placeholder="••••••••" autocomplete="off">
+                  </div>
+                </div>
+                <div class="auth-fields-title" style="margin-top: 4px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                  Element Locators
+                </div>
+                <div class="auth-field-row">
+                  <div class="field">
+                    <label class="field-label-sm" for="user-locator">Username Locator</label>
+                    <input class="field-input-sm" type="text" id="user-locator" placeholder="#user-name" autocomplete="off">
+                  </div>
+                  <div class="field">
+                    <label class="field-label-sm" for="pass-locator">Password Locator</label>
+                    <input class="field-input-sm" type="text" id="pass-locator" placeholder="#password" autocomplete="off">
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="field-label-sm" for="login-locator">Login Button Locator</label>
+                  <input class="field-input-sm" type="text" id="login-locator" placeholder="#login-button" autocomplete="off">
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="scan_type">Scan Type</label>
+              <select class="field-select" id="scan_type" name="scan_type">
+                <option value="login">Login Test — valid + invalid credentials</option>
+                <option value="bruteforce">Credential Bruteforce Probe</option>
+                <option value="api">API Health Check</option>
+                <option value="auth">Broken Authentication Check</option>
+                <option value="full">Full Scan — all of the above</option>
+              </select>
+              <p class="field-hint" id="scan-hint">Runs both positive and negative login tests.</p>
+            </div>
+
+            <!-- Client-side error -->
+            <div class="error-banner" id="js-error" role="alert">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span id="js-error-text"></span>
+            </div>
+
+            <button type="submit" class="btn-run" id="submit-btn">
+              <span class="btn-spinner" id="btn-spinner"></span>
+              <span id="btn-text">Run Scan</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Timeline (shown during scan) -->
+        <div class="timeline-section" id="timeline-section">
+          <div class="timeline-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Execution Timeline
+          </div>
+          <div class="timeline" id="timeline"></div>
+        </div>
+
+        <!-- Completion Summary (shown after scan) -->
+        <div class="completion-section" id="completion-section">
+          <div class="completion-card">
+            <div class="completion-status" id="completion-status"></div>
+            <div class="stat-row" id="stat-row">
+              <div class="stat-box">
+                <div class="stat-num total" id="stat-total">0</div>
+                <div class="stat-label">Total</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-num passed" id="stat-passed">0</div>
+                <div class="stat-label">Passed</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-num failed" id="stat-failed">0</div>
+                <div class="stat-label">Failed</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-num errors" id="stat-errors">0</div>
+                <div class="stat-label">Errors</div>
+              </div>
+            </div>
+            <div class="pass-rate-wrap" id="pass-rate-wrap">
+              <div class="pass-rate-header">
+                <span>Pass Rate</span>
+                <span id="pass-rate-pct">0%</span>
+              </div>
+              <div class="pass-rate-track">
+                <div class="pass-rate-fill good" id="pass-rate-fill" style="width: 0%"></div>
+              </div>
+            </div>
+            <div class="completion-actions" id="completion-actions"></div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- ──── DRAGGABLE SPLITTER ──── -->
+    <div class="splitter" id="splitter"></div>
+
+    <!-- ──── RIGHT PANEL: Execution Logs ──── -->
+    <aside class="log-panel" id="log-panel" aria-label="Execution logs">
+      <div class="log-panel-header">
+        <div class="log-panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          Execution Log
+          <span class="log-count" id="log-count">0</span>
+        </div>
+        <button class="log-clear-btn" id="log-clear-btn">Clear</button>
+      </div>
+      <div class="log-body" id="log-body">
+        <div class="log-empty" id="log-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          <span>No logs yet.<br>Run a scan to see execution output here.</span>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- ════════ FOOTER STATUS BAR ════════ -->
+  <footer class="footer-bar">
+    <div class="footer-status">
+      <span class="status-dot" id="footer-dot"></span>
+      <span id="footer-text">Ready</span>
+    </div>
+    <div class="footer-spacer"></div>
+    <span class="footer-timer" id="footer-timer"></span>
+  </footer>
+
+  <!-- ════════════════════════════════════════════════════════════
+       JAVASCRIPT
+       ════════════════════════════════════════════════════════════ -->
+  <script>
+    // ── Theme Toggle ─────────────────────────────────────────────
+    (function initTheme() {
+      const saved = localStorage.getItem("qa-theme") || "dark";
+      document.documentElement.setAttribute("data-theme", saved);
+      document.getElementById("theme-icon").textContent = saved === "dark" ? "☀️" : "🌙";
+    })();
+
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+      const html = document.documentElement;
+      const current = html.getAttribute("data-theme");
+      const next = current === "dark" ? "light" : "dark";
+      html.setAttribute("data-theme", next);
+      localStorage.setItem("qa-theme", next);
+      document.getElementById("theme-icon").textContent = next === "dark" ? "☀️" : "🌙";
+    });
+
+    // ══════════════════════════════════════════════════════════════
+    // DRAGGABLE SPLITTER
+    // ══════════════════════════════════════════════════════════════
+    (function initSplitter() {
+      const splitter = document.getElementById("splitter");
+      const logPanel = document.getElementById("log-panel");
+      let isDragging = false;
+      let startX = 0;
+      let startWidth = 0;
+
+      splitter.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        startX = e.clientX;
+        startWidth = logPanel.offsetWidth;
+        splitter.classList.add("dragging");
+        document.body.style.cursor = "col-resize";
+        document.body.style.userSelect = "none";
+        e.preventDefault();
+      });
+
+      document.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+        const delta = startX - e.clientX;
+        const newWidth = Math.min(700, Math.max(200, startWidth + delta));
+        logPanel.style.width = newWidth + "px";
+      });
+
+      document.addEventListener("mouseup", () => {
+        if (!isDragging) return;
+        isDragging = false;
+        splitter.classList.remove("dragging");
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      });
+    })();
+
+    // ══════════════════════════════════════════════════════════════
+    // PROGRESSIVE SCAN STRATEGY TOGGLE
+    // ══════════════════════════════════════════════════════════════
+    const strategyRadios = document.querySelectorAll('input[name="scan_strategy"]');
+    const strategyCards = document.querySelectorAll(".strategy-card");
+    const authFields = document.getElementById("auth-fields");
+
+    strategyRadios.forEach(radio => {
+      radio.addEventListener("change", () => {
+        strategyCards.forEach(c => c.classList.remove("selected"));
+        const parentCard = radio.closest(".strategy-card");
+        if (parentCard) {
+          parentCard.classList.add("selected");
+        }
+
+        const isAuth = radio.value === "authenticated";
+        if (isAuth) {
+          authFields.classList.add("visible");
+        } else {
+          authFields.classList.remove("visible");
+        }
+      });
+    });
+
+    function getSelectedStrategy() {
+      const checked = document.querySelector('input[name="scan_strategy"]:checked');
+      return checked ? checked.value : "external";
+    }
+
+    // ── Scan Type Hints ──────────────────────────────────────────
+    const HINTS = {
+      login:      "Runs both positive and negative login tests.",
+      bruteforce: "Tries a list of common credentials and reports which ones succeed.",
+      api:        "Sends GET/POST to the endpoint and checks status code + response time SLA.",
+      auth:       "Checks session token exposure, logout invalidation, and cookie flags.",
+      full:       "Runs all scan types in sequence — may take several minutes.",
+    };
+
+    const selectEl = document.getElementById("scan_type");
+    const hintEl   = document.getElementById("scan-hint");
+    selectEl.addEventListener("change", () => {
+      hintEl.textContent = HINTS[selectEl.value] || "";
+      syncSidebarSelection(selectEl.value);
+    });
+
+    // ── Sidebar Interaction ──────────────────────────────────────
+    const SCAN_TO_FILE = {
+      login:      "main_test.py",
+      bruteforce: "test_credentials.py",
+      api:        "test_api.py",
+      auth:       "test_auth.py",
+    };
+
+    function syncSidebarSelection(scanType) {
+      document.querySelectorAll(".suite-item, .full-scan-item").forEach(el => {
+        el.classList.toggle("active", el.dataset.scan === scanType);
+      });
+    }
+
+    document.querySelectorAll(".suite-item, .full-scan-item").forEach(el => {
+      el.addEventListener("click", () => {
+        const scan = el.dataset.scan;
+        selectEl.value = scan;
+        hintEl.textContent = HINTS[scan] || "";
+        syncSidebarSelection(scan);
+      });
+    });
+
+    // ── DOM References ───────────────────────────────────────────
+    const form         = document.getElementById("scan-form");
+    const submitBtn    = document.getElementById("submit-btn");
+    const btnText      = document.getElementById("btn-text");
+    const btnSpinner   = document.getElementById("btn-spinner");
+    const jsError      = document.getElementById("js-error");
+    const jsErrorText  = document.getElementById("js-error-text");
+    const timelineSec  = document.getElementById("timeline-section");
+    const timeline     = document.getElementById("timeline");
+    const completionSec = document.getElementById("completion-section");
+    const logBody      = document.getElementById("log-body");
+    const logEmpty     = document.getElementById("log-empty");
+    const logCount     = document.getElementById("log-count");
+    const logClearBtn  = document.getElementById("log-clear-btn");
+    const statusDot    = document.getElementById("status-dot");
+    const statusText   = document.getElementById("status-text");
+    const footerDot    = document.getElementById("footer-dot");
+    const footerText   = document.getElementById("footer-text");
+    const footerTimer  = document.getElementById("footer-timer");
+
+    let logLineCount = 0;
+    let currentLogFile = null;
+    let autoScroll = true;
+    let scanTimer = null;
+    let scanStartTime = null;
+
+    // ── Error Helpers ────────────────────────────────────────────
+    function showError(msg) {
+      jsErrorText.textContent = msg;
+      jsError.classList.add("visible");
+    }
+    function hideError() {
+      jsError.classList.remove("visible");
+    }
+
+    // ── Loading State ────────────────────────────────────────────
+    function setLoading(loading) {
+      submitBtn.disabled = loading;
+      if (loading) {
+        btnText.textContent = "Testing...";
+        submitBtn.classList.add("testing");
+        statusDot.className = "status-dot running";
+        footerDot.className = "status-dot running";
+      } else {
+        btnText.textContent = "Run Scan";
+        submitBtn.classList.remove("testing");
+      }
+    }
+
+    // ── Timer ────────────────────────────────────────────────────
+    function startTimer() {
+      scanStartTime = Date.now();
+      footerTimer.textContent = "00:00";
+      scanTimer = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - scanStartTime) / 1000);
+        const mins = String(Math.floor(elapsed / 60)).padStart(2, "0");
+        const secs = String(elapsed % 60).padStart(2, "0");
+        footerTimer.textContent = `${mins}:${secs}`;
+      }, 1000);
+    }
+    function stopTimer() {
+      if (scanTimer) clearInterval(scanTimer);
+    }
+
+    // ── Log Panel ────────────────────────────────────────────────
+    logBody.addEventListener("scroll", () => {
+      const { scrollTop, scrollHeight, clientHeight } = logBody;
+      autoScroll = (scrollHeight - scrollTop - clientHeight) < 40;
+    });
+
+    logClearBtn.addEventListener("click", () => {
+      logBody.innerHTML = "";
+      logBody.appendChild(logEmpty);
+      logEmpty.style.display = "flex";
+      logLineCount = 0;
+      logCount.textContent = "0";
+      currentLogFile = null;
+    });
+
+    function detectLogLevel(line) {
+      if (/\[PASS\]/i.test(line)) return "pass";
+      if (/\[FAIL\]/i.test(line)) return "fail";
+      if (/\[WARN\]/i.test(line)) return "warn";
+      if (/\[ERROR\]/i.test(line) || /^E\s/.test(line)) return "error";
+      if (/\[INFO\]/i.test(line)) return "info";
+      if (/^(PASSED|FAILED|ERROR|={3,}|_{3,}|-{3,}|test_|::|\s*def\s|platform\s|plugins:|collecting|collected)/.test(line)) return "pytest";
+      return "info";
+    }
+
+    function detectLogIcon(line) {
+      if (/navigat/i.test(line)) return "▶";
+      if (/click/i.test(line))   return "▶";
+      if (/fill|enter/i.test(line)) return "▶";
+      if (/\[PASS\]/i.test(line)) return "✓";
+      if (/\[FAIL\]/i.test(line)) return "✗";
+      if (/\[WARN\]/i.test(line)) return "⚠";
+      if (/\[ERROR\]/i.test(line) || /^E\s/.test(line)) return "✗";
+      if (/\[INFO\]/i.test(line)) return "›";
+      return "·";
+    }
+
+    function appendLogLine(timestamp, line, file) {
+      // Add file separator if new file
+      if (file && file !== currentLogFile) {
+        currentLogFile = file;
+        const sep = document.createElement("div");
+        sep.className = "log-file-sep";
+        sep.textContent = file;
+        logBody.appendChild(sep);
+      }
+
+      logEmpty.style.display = "none";
+
+      const level = detectLogLevel(line);
+      const icon = detectLogIcon(line);
+
+      const div = document.createElement("div");
+      div.className = `log-line level-${level}`;
+      div.innerHTML = `<span class="log-timestamp">${timestamp}</span><span class="log-icon">${icon}</span><span class="log-text">${escapeHtml(line)}</span>`;
+      logBody.appendChild(div);
+
+      logLineCount++;
+      logCount.textContent = logLineCount;
+
+      if (autoScroll) {
+        logBody.scrollTop = logBody.scrollHeight;
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ── Timeline ─────────────────────────────────────────────────
+    function addTimelineItem(file, label) {
+      const id = "tl-" + file.replace(/[^a-z0-9]/gi, "_");
+      const div = document.createElement("div");
+      div.className = "timeline-item waiting";
+      div.id = id;
+      div.innerHTML = `
+        <div class="timeline-item-top">
+          <span class="timeline-label">${label} <span class="timeline-duration"></span></span>
+          <span class="timeline-badge waiting">Queued</span>
+        </div>
+        <div class="timeline-detail"><span class="timeline-detail-stats">${file}</span></div>
+      `;
+      timeline.appendChild(div);
+    }
+
+    function updateTimelineItem(file, status, passed, failed, elapsedS) {
+      const id = "tl-" + file.replace(/[^a-z0-9]/gi, "_");
+      const item = document.getElementById(id);
+      if (!item) return;
+
+      const badgeLabel = { passed: "Passed", failed: "Failed", timeout: "Timeout", error: "Error" };
+      item.className = `timeline-item ${status}`;
+
+      const badge = item.querySelector(".timeline-badge");
+      badge.className = `timeline-badge ${status}`;
+      badge.textContent = badgeLabel[status] || status;
+
+      const detail = item.querySelector(".timeline-detail");
+      let statsText = file;
+      if (passed !== undefined) {
+        statsText += ` · ${passed} passed · ${failed} failed`;
+      }
+      detail.innerHTML = `<span class="timeline-detail-stats">${statsText}</span>`;
+
+      // Add duration next to title label
+      const durEl = item.querySelector(".timeline-duration");
+      if (durEl && elapsedS !== undefined && elapsedS !== null) {
+        const display = elapsedS >= 60
+          ? `${Math.floor(elapsedS / 60)}m ${(elapsedS % 60).toFixed(0)}s`
+          : `${elapsedS}s`;
+        durEl.textContent = `• Took ${display}`;
+      }
+    }
+
+    function markTimelineRunning(file) {
+      const id = "tl-" + file.replace(/[^a-z0-9]/gi, "_");
+      const item = document.getElementById(id);
+      if (!item) return;
+      item.className = "timeline-item running";
+      const badge = item.querySelector(".timeline-badge");
+      badge.className = "timeline-badge running";
+      badge.textContent = "Running";
+    }
+
+    // ── Sidebar Status Icons ─────────────────────────────────────
+    const FILE_TO_SCAN = {};
+    Object.entries(SCAN_TO_FILE).forEach(([scan, file]) => { FILE_TO_SCAN[file] = scan; });
+
+    function updateSidebarStatus(file, status) {
+      const scanKey = FILE_TO_SCAN[file];
+      if (!scanKey) return;
+      const iconEl = document.getElementById("status-" + scanKey);
+      if (!iconEl) return;
+
+      const suiteItem = document.getElementById("suite-" + scanKey);
+
+      if (status === "running") {
+        iconEl.textContent = "◉";
+        if (suiteItem) suiteItem.classList.add("running");
+      } else if (status === "passed") {
+        iconEl.textContent = "✓";
+        if (suiteItem) { suiteItem.classList.remove("running"); suiteItem.classList.add("passed"); }
+      } else if (status === "failed" || status === "error" || status === "timeout") {
+        iconEl.textContent = "✗";
+        if (suiteItem) { suiteItem.classList.remove("running"); suiteItem.classList.add("failed"); }
+      }
+    }
+
+    function resetSidebarStatus() {
+      ["login", "bruteforce", "api", "auth"].forEach(key => {
+        const iconEl = document.getElementById("status-" + key);
+        if (iconEl) iconEl.textContent = "";
+        const suiteItem = document.getElementById("suite-" + key);
+        if (suiteItem) suiteItem.classList.remove("running", "passed", "failed");
+      });
+    }
+
+    // ── Status Bar Updates ───────────────────────────────────────
+    function setStatus(text) {
+      statusText.textContent = text;
+      footerText.textContent = text;
+    }
+
+    // ── Form Submission / SSE Flow ───────────────────────────────
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      hideError();
+
+      const url      = document.getElementById("url").value.trim();
+      const scanType = selectEl.value;
+      const strategy = getSelectedStrategy();
+
+      if (!url) { showError("Please enter a target URL."); return; }
+
+      // Reset UI
+      timeline.innerHTML = "";
+      timelineSec.classList.remove("visible");
+      completionSec.classList.remove("visible");
+      logBody.innerHTML = "";
+      logBody.appendChild(logEmpty);
+      logEmpty.style.display = "flex";
+      logLineCount = 0;
+      logCount.textContent = "0";
+      currentLogFile = null;
+      resetSidebarStatus();
+      setLoading(true);
+      setStatus("Initializing scan...");
+      startTimer();
+
+      const sessionId = crypto.randomUUID();
+      const params = new URLSearchParams({ url, scan_type: scanType, session_id: sessionId, scan_strategy: strategy });
+
+      // Append auth credentials if authenticated strategy
+      if (strategy === "authenticated") {
+        const uname = document.getElementById("auth-username").value.trim();
+        const upass = document.getElementById("auth-password").value;
+        const uLoc  = document.getElementById("user-locator").value.trim();
+        const pLoc  = document.getElementById("pass-locator").value.trim();
+        const lLoc  = document.getElementById("login-locator").value.trim();
+        if (uname) params.set("username", uname);
+        if (upass) params.set("password", upass);
+        if (uLoc)  params.set("user_locator", uLoc);
+        if (pLoc)  params.set("pass_locator", pLoc);
+        if (lLoc)  params.set("login_locator", lLoc);
+      }
+
+      const evtSrc = new EventSource("/stream_scan?" + params.toString());
+
+      let pendingFiles = [];
+
+      evtSrc.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === "error") {
+          evtSrc.close();
+          setLoading(false);
+          stopTimer();
+          setStatus("Error");
+          statusDot.className = "status-dot";
+          footerDot.className = "status-dot";
+          showError(data.message);
+          return;
+        }
+
+        if (data.type === "start") {
+          data.files.forEach(({ file, label }) => {
+            addTimelineItem(file, label);
+            pendingFiles.push(file);
+          });
+          timelineSec.classList.add("visible");
+          timelineSec.scrollIntoView({ behavior: "smooth", block: "start" });
+          if (pendingFiles.length > 0) {
+            markTimelineRunning(pendingFiles[0]);
+            updateSidebarStatus(pendingFiles[0], "running");
+            setStatus(`Running: ${data.files[0].label}`);
+          }
+          return;
+        }
+
+        if (data.type === "log") {
+          appendLogLine(data.timestamp, data.line, data.file);
+          return;
+        }
+
+        if (data.type === "progress") {
+          updateTimelineItem(data.file, data.status, data.passed, data.failed, data.elapsed_s);
+          updateSidebarStatus(data.file, data.status);
+
+          const idx = pendingFiles.indexOf(data.file);
+          if (idx !== -1 && idx + 1 < pendingFiles.length) {
+            const nextFile = pendingFiles[idx + 1];
+            markTimelineRunning(nextFile);
+            updateSidebarStatus(nextFile, "running");
+            const nextItem = document.getElementById("tl-" + nextFile.replace(/[^a-z0-9]/gi, "_"));
+            if (nextItem) {
+              const lbl = nextItem.querySelector(".timeline-label")?.textContent || nextFile;
+              setStatus(`Running: ${lbl}`);
+            }
+          }
+          return;
+        }
+
+        if (data.type === "done") {
+          evtSrc.close();
+          setLoading(false);
+          stopTimer();
+
+          const s = data.summary;
+          const allOk = s.failed === 0 && s.error === 0;
+
+          // Update status
+          statusDot.className = "status-dot active";
+          footerDot.className = "status-dot active";
+          setStatus(`Complete: ${s.passed} passed, ${s.failed} failed`);
+
+          // Show completion section
+          document.getElementById("completion-status").textContent = allOk ? "✓ All Tests Passed" : "✗ Some Tests Failed";
+          document.getElementById("completion-status").className = `completion-status ${allOk ? "ok" : "warn"}`;
+          document.getElementById("stat-total").textContent = s.total;
+          document.getElementById("stat-passed").textContent = s.passed;
+          document.getElementById("stat-failed").textContent = s.failed;
+          document.getElementById("stat-errors").textContent = s.error;
+
+          const pct = s.total > 0 ? Math.round((s.passed / s.total) * 100) : 0;
+          document.getElementById("pass-rate-pct").textContent = pct + "%";
+          const fill = document.getElementById("pass-rate-fill");
+          fill.style.width = pct + "%";
+          fill.className = `pass-rate-fill ${pct >= 80 ? "good" : "bad"}`;
+
+          // Build action buttons
+          const actionsDiv = document.getElementById("completion-actions");
+          actionsDiv.innerHTML = "";
+
+          if (data.report_exists) {
+            actionsDiv.innerHTML += `<a class="btn-action primary" href="/view_report" target="_blank" rel="noopener">Open Report</a>`;
+            actionsDiv.innerHTML += `<a class="btn-action secondary" href="/download_report" download>Download</a>`;
+          }
+
+          // Build results page link
+          const rp = new URLSearchParams({
+            scan_label: data.scan_label,
+            target_url: data.target_url,
+            report_exists: data.report_exists ? "1" : "0",
+            total: s.total, passed: s.passed, failed: s.failed, error: s.error,
+          });
+          actionsDiv.innerHTML += `<a class="btn-action ghost" href="/results?${rp.toString()}">Full Results</a>`;
+
+          completionSec.classList.add("visible");
+
+          // Add completion log line
+          const now = new Date();
+          const ts = now.toTimeString().slice(0,8) + "." + String(now.getMilliseconds()).padStart(3,"0");
+          appendLogLine(ts, `[PASS] Scan complete — ${s.passed} passed, ${s.failed} failed, ${s.error} errors`, null);
+        }
+      };
+
+      evtSrc.onerror = () => {
+        evtSrc.close();
+        setLoading(false);
+        stopTimer();
+        statusDot.className = "status-dot";
+        footerDot.className = "status-dot";
+        setStatus("Disconnected");
+        showError("Connection to server was lost. Please try again.");
+      };
+    });
+  </script>
+</body>
+
+</html>

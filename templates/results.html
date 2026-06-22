@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan Results — QA Automation Engine</title>
+  <meta name="description" content="Detailed results from your latest QA automation scan run by the QA Automation Engine.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ════════════════════════════════════════════════════════════
+       RESET & DESIGN TOKENS (shared with index.html)
+       ════════════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root,
+    [data-theme="dark"] {
+      --bg-primary:     #0d1117;
+      --bg-secondary:   #161b22;
+      --bg-tertiary:    #1c2128;
+      --bg-elevated:    #21262d;
+      --border-default: #30363d;
+      --border-muted:   #21262d;
+      --text-primary:   #e6edf3;
+      --text-secondary: #8b949e;
+      --text-tertiary:  #6e7681;
+      --accent-blue:    #58a6ff;
+      --accent-purple:  #bc8cff;
+      --success:        #3fb950;
+      --success-muted:  rgba(63,185,80,0.15);
+      --danger:         #f85149;
+      --danger-muted:   rgba(248,81,73,0.15);
+      --warning:        #d29922;
+      --warning-muted:  rgba(210,153,34,0.15);
+      --font:           'Inter', system-ui, -apple-system, sans-serif;
+      --mono:           'JetBrains Mono', 'Fira Code', monospace;
+      --radius-sm:      4px;
+      --radius-md:      6px;
+      --transition:     0.2s ease;
+      color-scheme: dark;
+    }
+
+    [data-theme="light"] {
+      --bg-primary:     #ffffff;
+      --bg-secondary:   #f6f8fa;
+      --bg-tertiary:    #eaeef2;
+      --bg-elevated:    #d1d9e0;
+      --border-default: #d1d9e0;
+      --border-muted:   #eaeef2;
+      --text-primary:   #1f2328;
+      --text-secondary: #636c76;
+      --text-tertiary:  #8b949e;
+      --accent-blue:    #0969da;
+      --accent-purple:  #8250df;
+      --success:        #1a7f37;
+      --success-muted:  rgba(26,127,55,0.12);
+      --danger:         #cf222e;
+      --danger-muted:   rgba(207,34,46,0.12);
+      --warning:        #9a6700;
+      --warning-muted:  rgba(154,103,0,0.12);
+      color-scheme: light;
+    }
+
+    html { height: 100%; }
+    body {
+      font-family: var(--font);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;
+      line-height: 1.5;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    /* ── Top Bar ── */
+    .topbar {
+      height: 48px;
+      min-height: 48px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-default);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-primary);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .topbar-brand:hover { opacity: 0.85; }
+    .topbar-brand svg { flex-shrink: 0; }
+    .topbar-version {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      padding: 1px 6px;
+      border-radius: 10px;
+    }
+    .topbar-spacer { flex: 1; }
+    .topbar-nav {
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .topbar-nav span { color: var(--text-tertiary); }
+    .theme-toggle {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      color: var(--text-secondary);
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      transition: all var(--transition);
+      padding: 0;
+      line-height: 1;
+    }
+    .theme-toggle:hover {
+      color: var(--text-primary);
+      border-color: var(--text-tertiary);
+      background: var(--bg-elevated);
+    }
+
+    /* ── Content ── */
+    .content {
+      flex: 1;
+      max-width: 780px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* Status banner */
+    .status-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      border-radius: var(--radius-md);
+      margin-bottom: 24px;
+      font-size: 14px;
+      font-weight: 600;
+      animation: fade-in 0.3s ease;
+    }
+    .status-banner.ok {
+      background: var(--success-muted);
+      border: 1px solid rgba(63,185,80,0.3);
+      color: var(--success);
+    }
+    .status-banner.warn {
+      background: var(--danger-muted);
+      border: 1px solid rgba(248,81,73,0.3);
+      color: var(--danger);
+    }
+    .status-banner svg { flex-shrink: 0; }
+
+    /* Page title */
+    .page-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+    .page-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    /* Meta info */
+    .meta-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 13px;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .meta-row {
+      display: flex;
+      gap: 8px;
+    }
+    .meta-key {
+      color: var(--text-tertiary);
+      font-weight: 500;
+      min-width: 80px;
+    }
+    .meta-value {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    .meta-value.url {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--accent-blue);
+      word-break: break-all;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: 16px 12px;
+      text-align: center;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .stat-card .stat-num {
+      font-size: 28px;
+      font-weight: 700;
+      font-family: var(--mono);
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+    .stat-card .stat-num.total { color: var(--accent-blue); }
+    .stat-card .stat-num.passed { color: var(--success); }
+    .stat-card .stat-num.failed { color: var(--danger); }
+    .stat-card .stat-num.errors { color: var(--warning); }
+    .stat-card .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-top: 6px;
+    }
+
+    /* Pass rate bar */
+    .pass-rate-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      margin-bottom: 20px;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .pass-rate-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .pass-rate-pct {
+      font-family: var(--mono);
+      font-weight: 600;
+    }
+    .pass-rate-track {
+      height: 8px;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .pass-rate-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    }
+    .pass-rate-fill.good { background: var(--success); }
+    .pass-rate-fill.bad { background: var(--danger); }
+
+    /* Donut chart */
+    .donut-section {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 20px;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .donut {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .donut-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .donut-pct {
+      font-size: 22px;
+      font-weight: 700;
+      font-family: var(--mono);
+      line-height: 1;
+    }
+    .donut-pct-label {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .donut-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 13px;
+    }
+    .donut-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .donut-legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .donut-legend-dot.passed { background: var(--success); }
+    .donut-legend-dot.failed { background: var(--danger); }
+    .donut-legend-dot.errors { background: var(--warning); }
+    .donut-legend-label { color: var(--text-secondary); }
+    .donut-legend-count { font-weight: 600; font-family: var(--mono); color: var(--text-primary); margin-left: auto; }
+
+    /* Actions */
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: 1px solid var(--border-default);
+      transition: all var(--transition);
+      text-align: center;
+    }
+    .btn:hover { border-color: var(--text-tertiary); }
+    .btn-primary {
+      background: var(--accent-blue);
+      color: #fff;
+      border-color: transparent;
+    }
+    .btn-primary:hover { filter: brightness(1.1); border-color: transparent; }
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+    }
+    .btn-ghost:hover { color: var(--text-primary); }
+
+    .no-report {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      text-align: center;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      margin-bottom: 10px;
+    }
+
+    /* Footer */
+    .footer-bar {
+      height: 28px;
+      min-height: 28px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-default);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      gap: 12px;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 4px; }
+
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .donut-section { flex-direction: column; text-align: center; }
+      .actions { flex-direction: column; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ── Top Bar ── -->
+  <header class="topbar">
+    <a class="topbar-brand" href="/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+      QA Automation Engine
+    </a>
+    <span class="topbar-version">v1.0</span>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-nav">
+      <span>Dashboard</span> <span>/</span> Scan Results
+    </div>
+    <button class="theme-toggle" id="theme-toggle" title="Toggle theme" aria-label="Toggle dark/light theme">
+      <span id="theme-icon">☀️</span>
+    </button>
+  </header>
+
+  <!-- ── Content ── -->
+  <div class="content">
+
+    {% set all_ok = (summary.failed == 0 and summary.error == 0) %}
+
+    <!-- Status Banner -->
+    <div class="status-banner {{ 'ok' if all_ok else 'warn' }}">
+      {% if all_ok %}
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      All Tests Passed
+      {% else %}
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      {{ summary.failed + summary.error }} Test{{ 's' if (summary.failed + summary.error) != 1 else '' }} Failed
+      {% endif %}
+    </div>
+
+    <h1 class="page-title">Scan Complete</h1>
+    <p class="page-subtitle">Results for {{ scan_label }} scan against target.</p>
+
+    <!-- Meta -->
+    <div class="meta-section">
+      <div class="meta-row">
+        <span class="meta-key">Scan Type</span>
+        <span class="meta-value">{{ scan_label }}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-key">Target</span>
+        <span class="meta-value url">{{ target_url }}</span>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-num total">{{ summary.total }}</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num passed">{{ summary.passed }}</div>
+        <div class="stat-label">Passed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num failed">{{ summary.failed }}</div>
+        <div class="stat-label">Failed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num errors">{{ summary.error }}</div>
+        <div class="stat-label">Errors</div>
+      </div>
+    </div>
+
+    <!-- Donut Chart + Legend -->
+    {% if summary.total > 0 %}
+    {% set pct = ((summary.passed / summary.total) * 100) | round(1) %}
+    {% set fail_pct = (((summary.failed + summary.error) / summary.total) * 100) | round(1) %}
+    <div class="donut-section">
+      <div class="donut" id="donut" style="background: conic-gradient(var(--success) 0% {{ pct }}%, var(--danger) {{ pct }}% {{ pct + fail_pct }}%, var(--bg-tertiary) {{ pct + fail_pct }}% 100%);">
+        <div class="donut-center">
+          <div class="donut-pct" style="color: {{ 'var(--success)' if pct >= 80 else 'var(--danger)' }}">{{ pct | int }}%</div>
+          <div class="donut-pct-label">Pass Rate</div>
+        </div>
+      </div>
+      <div class="donut-legend">
+        <div class="donut-legend-item">
+          <span class="donut-legend-dot passed"></span>
+          <span class="donut-legend-label">Passed</span>
+          <span class="donut-legend-count">{{ summary.passed }}</span>
+        </div>
+        <div class="donut-legend-item">
+          <span class="donut-legend-dot failed"></span>
+          <span class="donut-legend-label">Failed</span>
+          <span class="donut-legend-count">{{ summary.failed }}</span>
+        </div>
+        {% if summary.error > 0 %}
+        <div class="donut-legend-item">
+          <span class="donut-legend-dot errors"></span>
+          <span class="donut-legend-label">Errors</span>
+          <span class="donut-legend-count">{{ summary.error }}</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Pass Rate Bar -->
+    <div class="pass-rate-section">
+      <div class="pass-rate-header">
+        <span>Pass Rate</span>
+        <span class="pass-rate-pct">{{ pct }}%</span>
+      </div>
+      <div class="pass-rate-track">
+        <div class="pass-rate-fill {{ 'good' if pct >= 80 else 'bad' }}" style="width: {{ pct }}%"></div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="actions">
+      {% if report_exists %}
+      <a id="btn-see-results" class="btn btn-primary" href="/view_report" target="_blank" rel="noopener noreferrer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Open Full Report
+      </a>
+      <a id="btn-download-report" class="btn btn-secondary" href="/download_report" download>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Report
+      </a>
+      {% else %}
+      <p class="no-report">No HTML report was generated for this scan.</p>
+      {% endif %}
+      <a id="btn-new-scan" class="btn btn-ghost" href="/">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+        New Scan
+      </a>
+    </div>
+
+  </div>
+
+  <!-- ── Footer ── -->
+  <footer class="footer-bar">
+    QA Automation Engine · Scan Results
+    <div style="flex:1"></div>
+    Powered by Playwright + pytest
+  </footer>
+
+  <script>
+    // Theme persistence
+    (function() {
+      var saved = localStorage.getItem("qa-theme") || "dark";
+      document.documentElement.setAttribute("data-theme", saved);
+      document.getElementById("theme-icon").textContent = saved === "dark" ? "☀️" : "🌙";
+    })();
+    document.getElementById("theme-toggle").addEventListener("click", function() {
+      var html = document.documentElement;
+      var current = html.getAttribute("data-theme");
+      var next = current === "dark" ? "light" : "dark";
+      html.setAttribute("data-theme", next);
+      localStorage.setItem("qa-theme", next);
+      document.getElementById("theme-icon").textContent = next === "dark" ? "☀️" : "🌙";
+    });
+  </script>
+</body>
+
+</html>
