@@ -28,14 +28,12 @@
       --text-secondary: #a1a1aa;
       --text-tertiary:  #71717a;
       --accent-blue:    #3b82f6;
-      --accent-purple:  #a78bfa;
       --success:        #22c55e;
       --success-muted:  rgba(34,197,94,0.15);
       --danger:         #ef4444;
       --danger-muted:   rgba(239,68,68,0.15);
       --warning:        #eab308;
       --warning-muted:  rgba(234,179,8,0.15);
-      --info-muted:     rgba(59,130,246,0.12);
       --overlay:        rgba(0,0,0,0.6);
       --font:           'Inter', system-ui, -apple-system, sans-serif;
       --mono:           'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
@@ -47,10 +45,6 @@
       --radius-xl:      calc(var(--radius) * 1.4);
       --transition:     0.2s cubic-bezier(0.4, 0, 0.2, 1);
       /* ── Ring & glow tokens ── */
-      --ring:           rgba(59,130,246,0.4);
-      --glow-primary:   rgba(59,130,246,0.25);
-      --glow-success:   rgba(34,197,94,0.3);
-      --glow-danger:    rgba(239,68,68,0.3);
       --glow-warning:   rgba(234,179,8,0.3);
       /* ── Glassmorphism ── */
       --glass-bg:       rgba(10,10,10,0.75);
@@ -68,19 +62,13 @@
       --text-secondary: #52525b;
       --text-tertiary:  #71717a;
       --accent-blue:    #2563eb;
-      --accent-purple:  #7c3aed;
       --success:        #16a34a;
       --success-muted:  rgba(22,163,74,0.1);
       --danger:         #dc2626;
       --danger-muted:   rgba(220,38,38,0.1);
       --warning:        #ca8a04;
       --warning-muted:  rgba(202,138,4,0.1);
-      --info-muted:     rgba(37,99,235,0.08);
       --overlay:        rgba(0,0,0,0.2);
-      --ring:           rgba(37,99,235,0.3);
-      --glow-primary:   rgba(37,99,235,0.15);
-      --glow-success:   rgba(22,163,74,0.2);
-      --glow-danger:    rgba(220,38,38,0.2);
       --glow-warning:   rgba(202,138,4,0.2);
       --glass-bg:       rgba(250,250,250,0.75);
       color-scheme: light;
@@ -181,9 +169,6 @@
       background: var(--bg-elevated);
     }
 
-    /* ════════════════════════════════════════════════════════════
-       MAIN LAYOUT — 3 PANES (flexbox for splitter support)
-       ════════════════════════════════════════════════════════════ */
     /* ════════════════════════════════════════════════════════════
        MAIN LAYOUT — 2 PANES (split-screen layout)
        ════════════════════════════════════════════════════════════ */
@@ -934,8 +919,6 @@
     .log-line.level-error .log-icon { border-color: var(--danger); background: rgba(239, 68, 68, 0.15); color: var(--danger); }
     .log-line.level-fail .log-text,
     .log-line.level-error .log-text { color: var(--text-primary); }
-    .log-line.level-pytest .log-icon { border-color: var(--text-tertiary); color: var(--text-tertiary); }
-    .log-line.level-pytest .log-text { color: var(--text-tertiary); }
 
     /* File separator in logs */
     .log-file-sep {
@@ -997,10 +980,6 @@
        ANIMATIONS
        ════════════════════════════════════════════════════════════ */
     @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
     @keyframes fade-in {
       from { opacity: 0; transform: translateY(4px); }
       to { opacity: 1; transform: translateY(0); }
@@ -1012,10 +991,6 @@
     @keyframes breathing-glow {
       0%, 100% { opacity: 1; box-shadow: 0 0 4px currentColor; }
       50% { opacity: 0.6; box-shadow: 0 0 14px currentColor; }
-    }
-    @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
     }
 
     /* ════════════════════════════════════════════════════════════
@@ -1349,9 +1324,7 @@
         const recommendedScan = STRATEGY_DEFAULT_SCAN[radio.value];
         if (recommendedScan && selectEl.value !== recommendedScan) {
           selectEl.value = recommendedScan;
-          // Sync the hint text and sidebar to the new selection
           hintEl.textContent = HINTS[recommendedScan] || "";
-          syncSidebarSelection(recommendedScan);
         }
       });
     });
@@ -1374,31 +1347,9 @@
     const hintEl   = document.getElementById("scan-hint");
     selectEl.addEventListener("change", () => {
       hintEl.textContent = HINTS[selectEl.value] || "";
-      syncSidebarSelection(selectEl.value);
     });
 
-    // ── Sidebar Interaction ──────────────────────────────────────
-    const SCAN_TO_FILE = {
-      login:      "main_test.py",
-      bruteforce: "test_credentials.py",
-      api:        "test_api.py",
-      auth:       "test_auth.py",
-    };
 
-    function syncSidebarSelection(scanType) {
-      document.querySelectorAll(".suite-item, .full-scan-item").forEach(el => {
-        el.classList.toggle("active", el.dataset.scan === scanType);
-      });
-    }
-
-    document.querySelectorAll(".suite-item, .full-scan-item").forEach(el => {
-      el.addEventListener("click", () => {
-        const scan = el.dataset.scan;
-        selectEl.value = scan;
-        hintEl.textContent = HINTS[scan] || "";
-        syncSidebarSelection(scan);
-      });
-    });
 
     // ── DOM References ───────────────────────────────────────────
     const form         = document.getElementById("scan-form");
@@ -1598,38 +1549,7 @@
       badge.textContent = "Running";
     }
 
-    // ── Sidebar Status Icons ─────────────────────────────────────
-    const FILE_TO_SCAN = {};
-    Object.entries(SCAN_TO_FILE).forEach(([scan, file]) => { FILE_TO_SCAN[file] = scan; });
 
-    function updateSidebarStatus(file, status) {
-      const scanKey = FILE_TO_SCAN[file];
-      if (!scanKey) return;
-      const iconEl = document.getElementById("status-" + scanKey);
-      if (!iconEl) return;
-
-      const suiteItem = document.getElementById("suite-" + scanKey);
-
-      if (status === "running") {
-        iconEl.textContent = "◉";
-        if (suiteItem) suiteItem.classList.add("running");
-      } else if (status === "passed") {
-        iconEl.textContent = "✓";
-        if (suiteItem) { suiteItem.classList.remove("running"); suiteItem.classList.add("passed"); }
-      } else if (status === "failed" || status === "error" || status === "timeout") {
-        iconEl.textContent = "✗";
-        if (suiteItem) { suiteItem.classList.remove("running"); suiteItem.classList.add("failed"); }
-      }
-    }
-
-    function resetSidebarStatus() {
-      ["login", "bruteforce", "api", "auth"].forEach(key => {
-        const iconEl = document.getElementById("status-" + key);
-        if (iconEl) iconEl.textContent = "";
-        const suiteItem = document.getElementById("suite-" + key);
-        if (suiteItem) suiteItem.classList.remove("running", "passed", "failed");
-      });
-    }
 
     // ── Status Bar Updates ───────────────────────────────────────
     function setStatus(text) {
@@ -1658,7 +1578,6 @@
       logLineCount = 0;
       logCount.textContent = "0";
       currentLogFile = null;
-      resetSidebarStatus();
       setLoading(true);
       setStatus("Initializing scan...");
       startTimer();
@@ -1707,7 +1626,6 @@
           timelineSec.scrollIntoView({ behavior: "smooth", block: "start" });
           if (pendingFiles.length > 0) {
             markTimelineRunning(pendingFiles[0]);
-            updateSidebarStatus(pendingFiles[0], "running");
             setStatus(`Running: ${data.files[0].label}`);
           }
           return;
@@ -1720,13 +1638,11 @@
 
         if (data.type === "progress") {
           updateTimelineItem(data.file, data.status, data.passed, data.failed, data.elapsed_s);
-          updateSidebarStatus(data.file, data.status);
 
           const idx = pendingFiles.indexOf(data.file);
           if (idx !== -1 && idx + 1 < pendingFiles.length) {
             const nextFile = pendingFiles[idx + 1];
             markTimelineRunning(nextFile);
-            updateSidebarStatus(nextFile, "running");
             const nextItem = document.getElementById("tl-" + nextFile.replace(/[^a-z0-9]/gi, "_"));
             if (nextItem) {
               const lbl = nextItem.querySelector(".timeline-label")?.textContent || nextFile;

@@ -34,13 +34,6 @@ SCAN_LABELS = {
     "full":       "Full Scan",
 }
 
-# Metadata for the sidebar test suites (icon hint, test count per file)
-SUITE_META = {
-    "login":      {"icon": "login",  "tests": 2, "file": "main_test.py"},
-    "bruteforce": {"icon": "key",    "tests": 1, "file": "test_credentials.py"},
-    "api":        {"icon": "api",    "tests": 2, "file": "test_api.py"},
-    "auth":       {"icon": "shield", "tests": 3, "file": "test_auth.py"},
-}
 
 REPORT_PATH = os.path.join(os.path.dirname(__file__), "report.html")
 
@@ -341,7 +334,6 @@ def stream_scan():
 
         # Emit final summary log milestone
         now = datetime.now()
-        total_tests = total_passed + total_failed + total_error
         if total_failed == 0 and total_error == 0:
             yield "data: " + json.dumps({
                 "type": "log",
