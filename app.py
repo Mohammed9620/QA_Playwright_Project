@@ -125,6 +125,41 @@ def format_milestone_log(line: str, target_url: str) -> str | None:
 #  Routes
 # ──────────────────────────────────────────────
 
+def normalize_url(url: str) -> str:
+    """
+    Sanitizes and auto-completes incomplete URLs for test runs:
+    - Strips leading/trailing whitespace.
+    - Preserves existing protocols (http://, https://, etc.).
+    - Appends '.com' if it's a single word without a domain suffix (excluding localhost).
+    - Prepends 'https://' (or 'http://' for localhost) if a protocol is missing.
+    """
+    url = url.strip()
+    if not url:
+        return url
+
+    # 1. If it already contains a protocol schema, leave it untouched
+    if re.match(r'^[a-zA-Z]+://', url):
+        return url
+
+    # 2. Separate port if present to avoid appending domain suffix to it
+    host_part = url
+    port_part = ""
+    if ":" in url:
+        parts = url.split(":", 1)
+        if parts[1].isdigit():
+            host_part = parts[0]
+            port_part = f":{parts[1]}"
+
+    # 3. Append '.com' if it's a single word without any '.' (excluding localhost)
+    if "." not in host_part and host_part.lower() != "localhost":
+        host_part = f"{host_part}.com"
+
+    # 4. Determine protocol (default to https://, default to http:// for local execution)
+    protocol = "http://" if host_part.lower() == "localhost" else "https://"
+
+    return f"{protocol}{host_part}{port_part}"
+
+
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -139,7 +174,7 @@ def stream_scan():
                   user_locator, pass_locator, login_locator
     Streams real-time log lines and progress events, then a final 'done' event.
     """
-    target_url     = request.args.get("url", "").strip()
+    target_url     = normalize_url(request.args.get("url", ""))
     scan_type      = request.args.get("scan_type", "login").strip()
     session_id     = request.args.get("session_id", str(uuid.uuid4()))
     scan_strategy  = request.args.get("scan_strategy", "external").strip()
