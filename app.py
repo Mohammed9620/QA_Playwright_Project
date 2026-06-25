@@ -68,6 +68,66 @@ def parse_pytest_summary(output: str) -> dict:
     return summary
 
 
+def format_milestone_log(line: str, target_url: str) -> str | None:
+    line_strip = line.strip()
+    if not line_strip:
+        return None
+
+    # Only include lines printed by our test suite via [INFO], [PASS], [WARN], [FAIL], [ERROR]
+    if not any(prefix in line_strip for prefix in ["[INFO]", "[PASS]", "[WARN]", "[FAIL]", "[ERROR]"]):
+        return None
+
+    # 1. Navigating to URL
+    if "Navigated to:" in line_strip:
+        m = re.search(r"Navigated to:\s*(\S+)", line_strip)
+        url = m.group(1) if m else target_url
+        return f"🌐 Opening URL: {url}"
+
+    # GET / POST requests (for API tests)
+    if "GET " in line_strip or "POST " in line_strip:
+        clean = re.sub(r"^\[(?:INFO|PASS|WARN|FAIL|ERROR)\]\s*", "", line_strip)
+        return f"🌐 {clean}"
+
+    # Status / SLA checks (for API tests)
+    if "Status:" in line_strip and "Elapsed:" in line_strip:
+        clean = re.sub(r"^\[(?:INFO|PASS|WARN|FAIL|ERROR)\]\s*", "", line_strip)
+        return f"📊 {clean}"
+
+    # 2. Username locator search
+    if "Entered username:" in line_strip:
+        return "🔑 Entering username..."
+    if "Entered username" in line_strip:
+        return "🔎 Searching for Username Locator..."
+
+    # 3. Password locator search
+    if "Entered password:" in line_strip:
+        return "🔒 Entering password..."
+    if "Entered password" in line_strip:
+        return "🔎 Searching for Password Locator..."
+
+    # 4. Login button click
+    if "Clicked the Login button" in line_strip:
+        return "🔘 Clicking Login Button..."
+
+    # 5. Assertions / Results
+    if "[PASS]" in line_strip:
+        msg = line_strip.replace("[PASS]", "").strip()
+        return f"✅ {msg}"
+    if "[WARN]" in line_strip:
+        msg = line_strip.replace("[WARN]", "").strip()
+        return f"⚠️ {msg}"
+    if "[FAIL]" in line_strip:
+        msg = line_strip.replace("[FAIL]", "").strip()
+        return f"❌ {msg}"
+    if "[ERROR]" in line_strip:
+        msg = line_strip.replace("[ERROR]", "").strip()
+        return f"❌ {msg}"
+
+    # General fallback
+    clean_line = re.sub(r"^\[(?:INFO|PASS|WARN|FAIL|ERROR)\]\s*", "", line_strip)
+    return clean_line
+
+
 # ──────────────────────────────────────────────
 #  Routes
 # ──────────────────────────────────────────────
@@ -128,6 +188,16 @@ def stream_scan():
         total_error  = 0
         report_generated = False
 
+        # Emit initial preparing test environment milestone
+        now = datetime.now()
+        yield "data: " + json.dumps({
+            "type": "log",
+            "file": "system",
+            "label": "System",
+            "line": "Status: Preparing test environment...",
+            "timestamp": now.strftime("%H:%M:%S")
+        }) + "\n\n"
+
         # Emit a 'start' event listing all files that will run
         yield "data: " + json.dumps({
             "type": "start",
@@ -137,6 +207,16 @@ def stream_scan():
         for i, (test_file, label) in enumerate(test_files):
             is_last = (i == len(test_files) - 1)
             file_start_time = time.monotonic()
+
+            # Yield start milestone for this specific test suite
+            now = datetime.now()
+            yield "data: " + json.dumps({
+                "type": "log",
+                "file": test_file,
+                "label": label,
+                "line": f"Status: Starting test suite: {label}...",
+                "timestamp": now.strftime("%H:%M:%S")
+            }) + "\n\n"
 
             # Build command — only attach the HTML reporter on the last file
             cmd = ["python", "-m", "pytest", test_file, "-v", "-s"]
@@ -159,15 +239,16 @@ def stream_scan():
                     line = raw_line.rstrip("\n").rstrip("\r")
                     output_lines.append(line)
 
-                    # Stream each line as a 'log' SSE event with timestamp
-                    if line.strip():  # skip blank lines
+                    # Only stream the custom milestones
+                    milestone = format_milestone_log(line, target_url)
+                    if milestone:
                         now = datetime.now()
                         yield "data: " + json.dumps({
                             "type": "log",
                             "file": test_file,
                             "label": label,
-                            "line": line,
-                            "timestamp": now.strftime("%H:%M:%S.") + now.strftime("%f")[:3],
+                            "line": f"Status: {milestone}",
+                            "timestamp": now.strftime("%H:%M:%S"),
                         }) + "\n\n"
 
                 proc.wait(timeout=300)
@@ -183,6 +264,25 @@ def stream_scan():
                 if is_last:
                     report_generated = os.path.exists(REPORT_PATH)
 
+                # Yield status outcome milestone for the suite
+                now = datetime.now()
+                if status == "passed":
+                    yield "data: " + json.dumps({
+                        "type": "log",
+                        "file": test_file,
+                        "label": label,
+                        "line": f"Status: ✅ Test suite '{label}' passed ({elapsed_s}s).",
+                        "timestamp": now.strftime("%H:%M:%S")
+                    }) + "\n\n"
+                else:
+                    yield "data: " + json.dumps({
+                        "type": "log",
+                        "file": test_file,
+                        "label": label,
+                        "line": f"Status: ❌ Test suite '{label}' failed ({elapsed_s}s).",
+                        "timestamp": now.strftime("%H:%M:%S")
+                    }) + "\n\n"
+
                 yield "data: " + json.dumps({
                     "type":      "progress",
                     "file":      test_file,
@@ -197,6 +297,15 @@ def stream_scan():
             except subprocess.TimeoutExpired:
                 if proc and proc.poll() is None:
                     proc.kill()
+                now = datetime.now()
+                yield "data: " + json.dumps({
+                    "type": "log",
+                    "file": test_file,
+                    "label": label,
+                    "line": f"Status: ❌ Test suite '{label}' timed out.",
+                    "timestamp": now.strftime("%H:%M:%S")
+                }) + "\n\n"
+
                 yield "data: " + json.dumps({
                     "type":   "progress",
                     "file":   test_file,
@@ -209,6 +318,15 @@ def stream_scan():
                 total_error += 1
 
             except Exception as exc:
+                now = datetime.now()
+                yield "data: " + json.dumps({
+                    "type": "log",
+                    "file": test_file,
+                    "label": label,
+                    "line": f"Status: ❌ Execution failed: {str(exc)}",
+                    "timestamp": now.strftime("%H:%M:%S")
+                }) + "\n\n"
+
                 yield "data: " + json.dumps({
                     "type":    "progress",
                     "file":    test_file,
@@ -220,6 +338,26 @@ def stream_scan():
                     "error":   1,
                 }) + "\n\n"
                 total_error += 1
+
+        # Emit final summary log milestone
+        now = datetime.now()
+        total_tests = total_passed + total_failed + total_error
+        if total_failed == 0 and total_error == 0:
+            yield "data: " + json.dumps({
+                "type": "log",
+                "file": "summary",
+                "label": "Summary",
+                "line": f"Status: ✅ Scan complete - {total_passed} passed, {total_failed} failed.",
+                "timestamp": now.strftime("%H:%M:%S")
+            }) + "\n\n"
+        else:
+            yield "data: " + json.dumps({
+                "type": "log",
+                "file": "summary",
+                "label": "Summary",
+                "line": f"Status: ❌ Scan complete - {total_passed} passed, {total_failed} failed.",
+                "timestamp": now.strftime("%H:%M:%S")
+            }) + "\n\n"
 
         # Store final result so the frontend can fetch it
         final = {
@@ -282,28 +420,28 @@ def get_report_theme_css():
 <style>
 /* ── Report Theme Override ── */
 :root {
-    --r-bg: #0d1117;
-    --r-surface: #161b22;
-    --r-border: #30363d;
-    --r-text: #e6edf3;
-    --r-text-muted: #8b949e;
-    --r-success: #3fb950;
-    --r-danger: #f85149;
-    --r-warning: #d29922;
-    --r-accent: #58a6ff;
+    --r-bg: #09090b;
+    --r-surface: #0a0a0a;
+    --r-border: #27272a;
+    --r-text: #fafafa;
+    --r-text-muted: #a1a1aa;
+    --r-success: #22c55e;
+    --r-danger: #ef4444;
+    --r-warning: #eab308;
+    --r-accent: #3b82f6;
     --r-font: 'Inter', system-ui, sans-serif;
     --r-mono: 'JetBrains Mono', monospace;
 }
 [data-theme="light"] {
     --r-bg: #ffffff;
-    --r-surface: #f6f8fa;
-    --r-border: #d1d9e0;
-    --r-text: #1f2328;
-    --r-text-muted: #636c76;
-    --r-success: #1a7f37;
-    --r-danger: #cf222e;
-    --r-warning: #9a6700;
-    --r-accent: #0969da;
+    --r-surface: #fafafa;
+    --r-border: #e4e4e7;
+    --r-text: #09090b;
+    --r-text-muted: #52525b;
+    --r-success: #16a34a;
+    --r-danger: #dc2626;
+    --r-warning: #ca8a04;
+    --r-accent: #2563eb;
 }
 body {
     font-family: var(--r-font) !important;
