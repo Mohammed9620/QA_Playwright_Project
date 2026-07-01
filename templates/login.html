@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — QA Automation Engine</title>
+  <meta name="description" content="Sign in to the QA Automation Engine dashboard.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ════════════════════════════════════════════════════════════
+       RESET & DESIGN TOKENS  (mirrors index.html palette exactly)
+       ════════════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root,
+    [data-theme="dark"] {
+      --bg-primary:     #09090b;
+      --bg-secondary:   #0a0a0a;
+      --bg-tertiary:    #171717;
+      --bg-elevated:    #1c1c1c;
+      --border-default: #27272a;
+      --border-muted:   #1c1c1c;
+      --text-primary:   #fafafa;
+      --text-secondary: #a1a1aa;
+      --text-tertiary:  #71717a;
+      --accent-blue:    #3b82f6;
+      --success:        #22c55e;
+      --success-muted:  rgba(34,197,94,0.15);
+      --danger:         #ef4444;
+      --danger-muted:   rgba(239,68,68,0.15);
+      --font:           'Inter', system-ui, -apple-system, sans-serif;
+      --mono:           'JetBrains Mono', 'Fira Code', monospace;
+      --radius:         0.625rem;
+      --radius-sm:      calc(var(--radius) * 0.6);
+      --transition:     0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      --glass-bg:       rgba(10,10,10,0.75);
+      color-scheme: dark;
+    }
+
+    [data-theme="light"] {
+      --bg-primary:     #ffffff;
+      --bg-secondary:   #fafafa;
+      --bg-tertiary:    #f4f4f5;
+      --bg-elevated:    #e4e4e7;
+      --border-default: #e4e4e7;
+      --border-muted:   #f4f4f5;
+      --text-primary:   #09090b;
+      --text-secondary: #52525b;
+      --text-tertiary:  #71717a;
+      --accent-blue:    #2563eb;
+      --success:        #16a34a;
+      --success-muted:  rgba(22,163,74,0.1);
+      --danger:         #dc2626;
+      --danger-muted:   rgba(220,38,38,0.1);
+      --glass-bg:       rgba(250,250,250,0.75);
+      color-scheme: light;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;
+      line-height: 1.5;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       TOP BAR  (identical to index.html topbar)
+       ════════════════════════════════════════════════════════════ */
+    .topbar {
+      height: 48px;
+      min-height: 48px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-default);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      z-index: 100;
+    }
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+    .topbar-brand svg { flex-shrink: 0; }
+    .topbar-version {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      padding: 1px 6px;
+      border-radius: 10px;
+      letter-spacing: 0.02em;
+    }
+    .topbar-spacer { flex: 1; }
+    .theme-toggle {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      color: var(--text-secondary);
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      transition: all var(--transition);
+      padding: 0;
+      line-height: 1;
+    }
+    .theme-toggle:hover {
+      color: var(--text-primary);
+      border-color: var(--text-tertiary);
+      background: var(--bg-elevated);
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       LOGIN CARD LAYOUT
+       ════════════════════════════════════════════════════════════ */
+    .login-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 380px;
+    }
+
+    /* ── Brand mark above card ── */
+    .login-brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .login-brand-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-blue);
+    }
+    .login-brand-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+    .login-brand-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* ── Card surface ── */
+    .login-surface {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+    }
+
+    /* ── Section header inside card ── */
+    .login-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-bottom: 20px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-default);
+    }
+
+    /* ── Fields ── */
+    .field {
+      margin-bottom: 20px;
+    }
+    .field:last-of-type {
+      margin-bottom: 0;
+    }
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .field-input {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: var(--mono);
+      font-size: 13px;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .field-input::placeholder {
+      color: var(--text-tertiary);
+      font-family: var(--mono);
+    }
+    .field-input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 1px var(--accent-blue);
+    }
+
+    /* ── Error banner ── */
+    .error-banner {
+      display: none;
+      align-items: flex-start;
+      gap: 8px;
+      background: var(--danger-muted);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: var(--danger);
+      line-height: 1.4;
+    }
+    .error-banner.visible { display: flex; }
+    .error-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Submit button ── */
+    .btn-login {
+      width: 100%;
+      margin-top: 24px;
+      padding: 10px 16px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      background: var(--accent-blue);
+      color: #ffffff;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: filter var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-login:hover { filter: brightness(1.12); }
+    .btn-login:active { filter: brightness(0.95); }
+
+    /* ── Back link ── */
+    .login-back {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    .login-back a {
+      color: var(--accent-blue);
+      text-decoration: none;
+    }
+    .login-back a:hover { text-decoration: underline; }
+
+    /* ════════════════════════════════════════════════════════════
+       FOOTER STATUS BAR
+       ════════════════════════════════════════════════════════════ */
+    .footer-bar {
+      height: 28px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-default);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      gap: 12px;
+    }
+    .footer-spacer { flex: 1; }
+
+    /* ════════════════════════════════════════════════════════════
+       SCROLLBAR
+       ════════════════════════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-default);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+  </style>
+</head>
+
+<body>
+  <!-- ════════ TOP BAR ════════ -->
+  <header class="topbar">
+    <a class="topbar-brand" href="/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+      QA Automation Engine
+    </a>
+    <span class="topbar-version">v1.0</span>
+    <div class="topbar-spacer"></div>
+    <button class="theme-toggle" id="theme-toggle" title="Toggle theme" aria-label="Toggle dark/light theme">
+      <span id="theme-icon">☀️</span>
+    </button>
+  </header>
+
+  <!-- ════════ LOGIN CARD ════════ -->
+  <main class="login-wrapper">
+    <div class="login-card">
+
+      <!-- Brand mark -->
+      <div class="login-brand">
+        <div class="login-brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0110 0v4"/>
+          </svg>
+        </div>
+        <span class="login-brand-title">Sign in</span>
+        <span class="login-brand-sub">Access the QA Automation Engine</span>
+      </div>
+
+      <!-- Card surface -->
+      <div class="login-surface">
+        <div class="login-section-title">Credentials</div>
+
+        <!-- Error banner: shown by server on bad credentials OR by JS for empty fields -->
+        {% if error %}
+        <div class="error-banner visible" id="login-error" role="alert">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span id="login-error-text">{{ error }}</span>
+        </div>
+        {% else %}
+        <div class="error-banner" id="login-error" role="alert">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span id="login-error-text">Invalid username or password.</span>
+        </div>
+        {% endif %}
+
+        <form id="login-form" method="POST" action="/login" novalidate>
+          <div class="field">
+            <label class="field-label" for="username">Username</label>
+            <input
+              class="field-input"
+              type="text"
+              id="username"
+              name="username"
+              placeholder="admin"
+              autocomplete="username"
+              spellcheck="false"
+              required
+            >
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="password">Password</label>
+            <input
+              class="field-input"
+              type="password"
+              id="password"
+              name="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+            >
+          </div>
+
+          <button type="submit" class="btn-login" id="login-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
+            Sign in
+          </button>
+        </form>
+      </div>
+
+      <p class="login-back">
+        <a href="/">&larr; Back to Dashboard</a>
+      </p>
+    </div>
+  </main>
+
+  <!-- ════════ FOOTER STATUS BAR ════════ -->
+  <footer class="footer-bar">
+    <span>QA Automation Engine</span>
+    <div class="footer-spacer"></div>
+    <span>Authentication</span>
+  </footer>
+
+  <!-- ════════ JAVASCRIPT ════════ -->
+  <script>
+    // ── Theme Toggle ─────────────────────────────────────────────
+    (function initTheme() {
+      const saved = localStorage.getItem("qa-theme") || "dark";
+      document.documentElement.setAttribute("data-theme", saved);
+      document.getElementById("theme-icon").textContent = saved === "dark" ? "☀️" : "🌙";
+    })();
+
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+      const html = document.documentElement;
+      const current = html.getAttribute("data-theme");
+      const next = current === "dark" ? "light" : "dark";
+      html.setAttribute("data-theme", next);
+      localStorage.setItem("qa-theme", next);
+      document.getElementById("theme-icon").textContent = next === "dark" ? "☀️" : "🌙";
+    });
+
+    // ── Basic client-side validation before submit ────────────────
+    document.getElementById("login-form").addEventListener("submit", (e) => {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const errEl    = document.getElementById("login-error");
+      const errText  = document.getElementById("login-error-text");
+
+      if (!username || !password) {
+        e.preventDefault();
+        errText.textContent = "Please enter both username and password.";
+        errEl.classList.add("visible");
+        return;
+      }
+
+      errEl.classList.remove("visible");
+    });
+  </script>
+</body>
+
+</html>

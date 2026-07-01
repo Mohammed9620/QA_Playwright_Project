@@ -1,14 +1,16 @@
 import os
 import re
 import json
+import sqlite3
 import subprocess
 import threading
 import time
 import uuid
 from datetime import datetime
-from flask import Flask, render_template, request, send_file, Response, jsonify
+from flask import Flask, render_template, request, send_file, Response, jsonify, session, redirect, url_for
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-production")
 
 # ──────────────────────────────────────────────
 #  Scan type → pytest file mapping
@@ -162,7 +164,53 @@ def normalize_url(url: str) -> str:
 
 @app.route("/")
 def home():
+    """Dashboard — requires an active login session."""
+    if "username" not in session:
+        return redirect(url_for("login"))
     return render_template("index.html")
+
+
+DB_PATH = os.path.join(os.path.dirname(__file__), "users.db")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """Login page. GET renders the form; POST validates credentials and creates a session."""
+    # Already logged in — send straight to the dashboard
+    if "username" in session:
+        return redirect(url_for("home"))
+
+    error = None
+
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+
+        if not username or not password:
+            error = "Please enter both username and password."
+        else:
+            # Query the database for a matching user
+            try:
+                conn = sqlite3.connect(DB_PATH)
+                conn.row_factory = sqlite3.Row
+                row = conn.execute(
+                    "SELECT id, username, password FROM users WHERE username = ?",
+                    (username,),
+                ).fetchone()
+                conn.close()
+
+                if row and row["password"] == password:
+                    # Credentials match — create the session and redirect
+                    session["user_id"]  = row["id"]
+                    session["username"] = row["username"]
+                    return redirect(url_for("home"))
+                else:
+                    error = "Invalid username or password."
+
+            except Exception as exc:
+                error = f"Database error: {exc}"
+
+    return render_template("login.html", error=error)
 
 
 @app.route("/stream_scan")
