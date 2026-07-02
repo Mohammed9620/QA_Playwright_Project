@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel — QA Automation Engine</title>
+  <meta name="description" content="Admin panel for QA Automation Engine.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ════════════════════════════════════════════════════════════
+       RESET & DESIGN TOKENS  (mirrors index.html palette exactly)
+       ════════════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root,
+    [data-theme="dark"] {
+      --bg-primary:     #09090b;
+      --bg-secondary:   #0a0a0a;
+      --bg-tertiary:    #171717;
+      --bg-elevated:    #1c1c1c;
+      --border-default: #27272a;
+      --border-muted:   #1c1c1c;
+      --text-primary:   #fafafa;
+      --text-secondary: #a1a1aa;
+      --text-tertiary:  #71717a;
+      --accent-blue:    #3b82f6;
+      --success:        #22c55e;
+      --success-muted:  rgba(34,197,94,0.15);
+      --danger:         #ef4444;
+      --danger-muted:   rgba(239,68,68,0.15);
+      --font:           'Inter', system-ui, -apple-system, sans-serif;
+      --mono:           'JetBrains Mono', 'Fira Code', monospace;
+      --radius:         0.625rem;
+      --radius-sm:      calc(var(--radius) * 0.6);
+      --transition:     0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      --glass-bg:       rgba(10,10,10,0.75);
+      color-scheme: dark;
+    }
+
+    [data-theme="light"] {
+      --bg-primary:     #ffffff;
+      --bg-secondary:   #fafafa;
+      --bg-tertiary:    #f4f4f5;
+      --bg-elevated:    #e4e4e7;
+      --border-default: #e4e4e7;
+      --border-muted:   #f4f4f5;
+      --text-primary:   #09090b;
+      --text-secondary: #52525b;
+      --text-tertiary:  #71717a;
+      --accent-blue:    #2563eb;
+      --success:        #16a34a;
+      --success-muted:  rgba(22,163,74,0.1);
+      --danger:         #dc2626;
+      --danger-muted:   rgba(220,38,38,0.1);
+      --glass-bg:       rgba(250,250,250,0.75);
+      color-scheme: light;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;
+      line-height: 1.5;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       TOP BAR
+       ════════════════════════════════════════════════════════════ */
+    .topbar {
+      height: 48px;
+      min-height: 48px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-default);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      z-index: 100;
+    }
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+    .topbar-brand svg { flex-shrink: 0; }
+    .topbar-version {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      padding: 1px 6px;
+      border-radius: 10px;
+      letter-spacing: 0.02em;
+    }
+    .topbar-spacer { flex: 1; }
+    .theme-toggle {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      color: var(--text-secondary);
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      transition: all var(--transition);
+      padding: 0;
+      line-height: 1;
+    }
+    .theme-toggle:hover {
+      color: var(--text-primary);
+      border-color: var(--text-tertiary);
+      background: var(--bg-elevated);
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       ADMIN CONTAINER
+       ════════════════════════════════════════════════════════════ */
+    .admin-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+
+    .admin-card {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    /* ── Header ── */
+    .admin-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .admin-header-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-blue);
+    }
+    .admin-header-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+    .admin-header-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* ── Progress Indicators ── */
+    .steps-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      gap: 8px;
+    }
+    .step-dot {
+      flex: 1;
+      height: 4px;
+      background: var(--bg-tertiary);
+      border-radius: 2px;
+      transition: background var(--transition);
+    }
+    .step-dot.active {
+      background: var(--accent-blue);
+    }
+    .step-dot.completed {
+      background: var(--success);
+    }
+
+    /* ── Card surface ── */
+    .admin-surface {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+    }
+
+    /* ── Section header inside card ── */
+    .admin-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-bottom: 20px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-default);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .admin-step-label {
+      color: var(--accent-blue);
+      font-weight: 700;
+    }
+
+    /* ── Fields ── */
+    .field {
+      margin-bottom: 20px;
+    }
+    .field:last-of-type {
+      margin-bottom: 0;
+    }
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .field-input {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: var(--mono);
+      font-size: 13px;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .field-input::placeholder {
+      color: var(--text-tertiary);
+      font-family: var(--mono);
+    }
+    .field-input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 1px var(--accent-blue);
+    }
+    .field-info {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    /* ── Banners ── */
+    .error-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: var(--danger-muted);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: var(--danger);
+      line-height: 1.4;
+    }
+    .error-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+    .info-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: rgba(59,130,246,0.1);
+      border: 1px solid rgba(59,130,246,0.25);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: var(--accent-blue);
+      line-height: 1.4;
+    }
+    .info-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+    .success-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: var(--success-muted);
+      border: 1px solid rgba(34,197,94,0.25);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: var(--success);
+      line-height: 1.4;
+    }
+    .success-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Buttons ── */
+    .btn-submit {
+      width: 100%;
+      margin-top: 24px;
+      padding: 10px 16px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      background: var(--accent-blue);
+      color: #ffffff;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: filter var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-submit:hover { filter: brightness(1.12); }
+    .btn-submit:active { filter: brightness(0.95); }
+
+    .btn-link {
+      background: none;
+      border: none;
+      color: var(--accent-blue);
+      font-family: var(--font);
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .admin-back {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    .admin-back a {
+      color: var(--accent-blue);
+      text-decoration: none;
+    }
+    .admin-back a:hover { text-decoration: underline; }
+  </style>
+</head>
+
+<body>
+  <!-- ════════ TOP BAR ════════ -->
+  <header class="topbar">
+    <a class="topbar-brand" href="/">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+      QA Automation Engine
+    </a>
+    <span class="topbar-version">v1.0</span>
+    <div class="topbar-spacer"></div>
+    <a href="/" style="font-size: 12px; color: var(--text-secondary); text-decoration: none; margin-right: 12px;">Dashboard</a>
+    <button class="theme-toggle" id="theme-toggle" title="Toggle theme" aria-label="Toggle dark/light theme">
+      <span id="theme-icon">☀️</span>
+    </button>
+  </header>
+
+  <!-- ════════ CONTAINER ════════ -->
+  <main class="admin-wrapper">
+    <div class="admin-card">
+
+      <!-- Header -->
+      <div class="admin-header">
+        <div class="admin-header-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <span class="admin-header-title">Create Admin Console</span>
+        <span class="admin-header-sub">Provision a new Administrator profile</span>
+      </div>
+
+      <!-- Steps Indicator -->
+      <div class="steps-indicator">
+        <div class="step-dot {% if step == 'email' or step == 'verify_otp' or step == 'register' %}active{% endif %} {% if step != 'email' %}completed{% endif %}"></div>
+        <div class="step-dot {% if step == 'verify_otp' or step == 'register' %}active{% endif %} {% if step == 'register' %}completed{% endif %}"></div>
+        <div class="step-dot {% if step == 'register' %}active{% endif %}"></div>
+      </div>
+
+      <!-- Card surface -->
+      <div class="admin-surface">
+        
+        <!-- Step Titles -->
+        {% if step == 'email' %}
+          <div class="signup-section-title">
+            <span>Step 1: Admin Invitation</span>
+            <span class="admin-step-label">Email Verify</span>
+          </div>
+        {% elif step == 'verify_otp' %}
+          <div class="signup-section-title">
+            <span>Step 2: Admin Validation</span>
+            <span class="admin-step-label">OTP Verification</span>
+          </div>
+        {% elif step == 'register' %}
+          <div class="signup-section-title">
+            <span>Step 3: Setup Profile</span>
+            <span class="admin-step-label">Credentials</span>
+          </div>
+        {% endif %}
+
+        <!-- Banners -->
+        {% if error %}
+          <div class="error-banner" role="alert">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span>{{ error }}</span>
+          </div>
+        {% endif %}
+
+        {% if success_msg %}
+          <div class="success-banner">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span>{{ success_msg }}</span>
+          </div>
+        {% endif %}
+
+        {% if info %}
+          <div class="info-banner">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <span>{{ info }}</span>
+          </div>
+        {% endif %}
+
+        <!-- Forms -->
+        {% if step == 'email' %}
+          <form method="POST" action="/admin/create_admin">
+            <input type="hidden" name="action" value="send_otp">
+            <div class="field">
+              <label class="field-label" for="email">New Admin Email</label>
+              <input
+                class="field-input"
+                type="email"
+                id="email"
+                name="email"
+                placeholder="newadmin@example.com"
+                required
+                autofocus
+              >
+              <p class="field-info">Enter the email address for the new administrator. A 6-digit OTP code will be sent to confirm ownership.</p>
+            </div>
+            <button type="submit" class="btn-submit">
+              Send Admin OTP Code
+            </button>
+          </form>
+
+        {% elif step == 'verify_otp' %}
+          <form method="POST" action="/admin/create_admin">
+            <input type="hidden" name="action" value="verify_otp">
+            <div class="field">
+              <label class="field-label" for="otp_code">OTP Verification Code</label>
+              <input
+                class="field-input"
+                type="text"
+                id="otp_code"
+                name="otp_code"
+                placeholder="000000"
+                maxlength="6"
+                required
+                autofocus
+              >
+              <p class="field-info">Enter the 6-digit code printed in the backend console log.</p>
+            </div>
+            <button type="submit" class="btn-submit">
+              Confirm OTP Code
+            </button>
+          </form>
+
+          <form method="POST" action="/admin/create_admin" style="margin-top: 16px; text-align: center;">
+            <input type="hidden" name="action" value="send_otp">
+            <input type="hidden" name="email" value="{{ email }}">
+            <span style="font-size: 12px; color: var(--text-tertiary)">Didn't get the code? </span>
+            <button type="submit" class="btn-link">Resend OTP</button>
+          </form>
+
+          <form method="POST" action="/admin/create_admin" style="margin-top: 8px; text-align: center;">
+            <input type="hidden" name="action" value="restart">
+            <button type="submit" class="btn-link" style="color: var(--text-tertiary)">Use different email</button>
+          </form>
+
+        {% elif step == 'register' %}
+          <form method="POST" action="/admin/create_admin">
+            <input type="hidden" name="action" value="register">
+            
+            <div class="field">
+              <label class="field-label">Verified Email</label>
+              <input class="field-input" type="text" value="{{ email }}" disabled style="opacity: 0.6; cursor: not-allowed;">
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="username">Admin Username</label>
+              <input
+                class="field-input"
+                type="text"
+                id="username"
+                name="username"
+                placeholder="super_admin"
+                required
+                autofocus
+              >
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="password">Admin Password</label>
+              <input
+                class="field-input"
+                type="password"
+                id="password"
+                name="password"
+                placeholder="••••••••"
+                required
+              >
+            </div>
+
+            <button type="submit" class="btn-submit">
+              Create Admin Profile
+            </button>
+          </form>
+        {% endif %}
+
+      </div>
+
+      <p class="admin-back">
+        <a href="/">&larr; Return to Dashboard</a>
+      </p>
+    </div>
+  </main>
+
+  <!-- ════════ FOOTER STATUS BAR ════════ -->
+  <footer class="footer-bar">
+    <div class="footer-spacer"></div>
+  </footer>
+
+  <!-- ════════ JAVASCRIPT ════════ -->
+  <script>
+    // ── Theme Toggle ─────────────────────────────────────────────
+    (function initTheme() {
+      const saved = localStorage.getItem("qa-theme") || "dark";
+      document.documentElement.setAttribute("data-theme", saved);
+      document.getElementById("theme-icon").textContent = saved === "dark" ? "☀️" : "🌙";
+    })();
+
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+      const html = document.documentElement;
+      const current = html.getAttribute("data-theme");
+      const next = current === "dark" ? "light" : "dark";
+      html.setAttribute("data-theme", next);
+      localStorage.setItem("qa-theme", next);
+      document.getElementById("theme-icon").textContent = next === "dark" ? "☀️" : "🌙";
+    });
+  </script>
+</body>
+
+</html>

@@ -1,17 +1,10 @@
 """
 init_db.py
 ──────────
-Run this script once to bootstrap the SQLite authentication database.
+Recreates the users and otp_store database tables for the OTP security system.
 
 Usage:
     python init_db.py
-
-What it does:
-  1. Creates (or opens) users.db in the project root.
-  2. Creates the `users` table if it does not already exist.
-  3. Inserts a default admin user for first-run testing.
-     If the admin user already exists the insert is silently skipped
-     (INSERT OR IGNORE), so it is safe to re-run this script at any time.
 """
 
 import sqlite3
@@ -20,36 +13,51 @@ import os
 # ── Config ────────────────────────────────────────────────────────────────────
 DB_PATH = os.path.join(os.path.dirname(__file__), "users.db")
 
-# ── Default seed user (for local testing only — change before any deployment) ─
+# ── Default seed admin ────────────────────────────────────────────────────────
+DEFAULT_EMAIL = "admin@test.com"
 DEFAULT_USERNAME = "admin"
-DEFAULT_PASSWORD = "password123"   # Plain text for now; Phase 2 will hash this.
+DEFAULT_PASSWORD = "password123"
+DEFAULT_ROLE = "admin"
 
-# ── Bootstrap ─────────────────────────────────────────────────────────────────
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    # Create the users table (no-op if it already exists)
+    # Drop existing tables to refresh schema
+    cursor.execute("DROP TABLE IF EXISTS users")
+    cursor.execute("DROP TABLE IF EXISTS otp_store")
+
+    # Create users table
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
+        CREATE TABLE users (
             id       INTEGER PRIMARY KEY AUTOINCREMENT,
+            email    TEXT    UNIQUE NOT NULL,
             username TEXT    UNIQUE NOT NULL,
-            password TEXT    NOT NULL
+            password TEXT    NOT NULL,
+            role     TEXT    NOT NULL
         )
     """)
 
-    # Insert default admin — silently skip if username already taken
+    # Create otp_store table
+    cursor.execute("""
+        CREATE TABLE otp_store (
+            email      TEXT PRIMARY KEY,
+            otp_code   TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )
+    """)
+
+    # Insert default admin user
     cursor.execute(
-        "INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)",
-        (DEFAULT_USERNAME, DEFAULT_PASSWORD),
+        "INSERT INTO users (email, username, password, role) VALUES (?, ?, ?, ?)",
+        (DEFAULT_EMAIL, DEFAULT_USERNAME, DEFAULT_PASSWORD, DEFAULT_ROLE),
     )
 
     conn.commit()
     conn.close()
 
-    print("[init_db] Database ready at: " + DB_PATH)
-    print("[init_db] Default user      : " + DEFAULT_USERNAME)
-    print("[init_db] NOTE: Store hashed passwords before going to production.")
+    print("[init_db] Database reset ready at: " + DB_PATH)
+    print(f"[init_db] Admin seeded: {DEFAULT_USERNAME} / {DEFAULT_EMAIL}")
 
 
 if __name__ == "__main__":

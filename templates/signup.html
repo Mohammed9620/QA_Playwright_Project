@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign In — QA Automation Engine</title>
-  <meta name="description" content="Sign in to the QA Automation Engine dashboard.">
+  <title>Sign Up — QA Automation Engine</title>
+  <meta name="description" content="Sign up for the QA Automation Engine.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -74,7 +74,7 @@
     }
 
     /* ════════════════════════════════════════════════════════════
-       TOP BAR  (identical to index.html topbar)
+       TOP BAR
        ════════════════════════════════════════════════════════════ */
     .topbar {
       height: 48px;
@@ -133,9 +133,9 @@
     }
 
     /* ════════════════════════════════════════════════════════════
-       LOGIN CARD LAYOUT
+       SIGNUP CARD LAYOUT
        ════════════════════════════════════════════════════════════ */
-    .login-wrapper {
+    .signup-wrapper {
       flex: 1;
       display: flex;
       align-items: center;
@@ -143,21 +143,21 @@
       padding: 40px 16px;
     }
 
-    .login-card {
+    .signup-card {
       width: 100%;
-      max-width: 380px;
+      max-width: 420px;
     }
 
     /* ── Brand mark above card ── */
-    .login-brand {
+    .signup-brand {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 8px;
-      margin-bottom: 32px;
+      margin-bottom: 24px;
       text-align: center;
     }
-    .login-brand-icon {
+    .signup-brand-icon {
       width: 40px;
       height: 40px;
       background: var(--bg-tertiary);
@@ -168,19 +168,40 @@
       justify-content: center;
       color: var(--accent-blue);
     }
-    .login-brand-title {
+    .signup-brand-title {
       font-size: 17px;
       font-weight: 600;
       color: var(--text-primary);
       letter-spacing: -0.01em;
     }
-    .login-brand-sub {
+    .signup-brand-sub {
       font-size: 13px;
       color: var(--text-secondary);
     }
 
+    /* ── Progress Indicators ── */
+    .steps-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      gap: 8px;
+    }
+    .step-dot {
+      flex: 1;
+      height: 4px;
+      background: var(--bg-tertiary);
+      border-radius: 2px;
+      transition: background var(--transition);
+    }
+    .step-dot.active {
+      background: var(--accent-blue);
+    }
+    .step-dot.completed {
+      background: var(--success);
+    }
+
     /* ── Card surface ── */
-    .login-surface {
+    .signup-surface {
       background: var(--bg-secondary);
       border: 1px solid var(--border-default);
       border-radius: var(--radius);
@@ -188,7 +209,7 @@
     }
 
     /* ── Section header inside card ── */
-    .login-section-title {
+    .signup-section-title {
       font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.05em;
@@ -197,55 +218,59 @@
       margin-bottom: 20px;
       padding-bottom: 8px;
       border-bottom: 1px solid var(--border-default);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    /* Segmented Tab Controls */
-    .tabs-container {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 24px;
-        justify-content: center;
-    }
-    .tab-btn {
-        padding: 10px 20px;
-        border: 1px solid var(--border-default, #333);
-        background-color: transparent;
-        color: #888;
-        cursor: pointer;
-        border-radius: 6px;
-        transition: all 0.3s ease;
-        font-size: 14px;
-        font-weight: 500;
-    }
-    .tab-btn.active {
-        background-color: #0052cc !important;
-        color: #ffffff !important;
-        border-color: #0052cc !important;
-        font-weight: 600;
-    }
-    .form-group {
-        margin-bottom: 18px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-    .form-group input {
-        padding: 12px;
-        border: 1px solid var(--border-default, #333);
-        background-color: #1e1e1e;
-        color: #fff;
-        border-radius: 6px;
-        width: 100%;
-        font-size: 14px;
-    }
-    .form-group label {
-        font-size: 12px;
-        font-weight: 500;
-        color: var(--text-primary);
+    .signup-step-label {
+      color: var(--accent-blue);
+      font-weight: 700;
     }
 
-    /* ── Error banner ── */
+    /* ── Fields ── */
+    .field {
+      margin-bottom: 20px;
+    }
+    .field:last-of-type {
+      margin-bottom: 0;
+    }
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .field-input {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: var(--mono);
+      font-size: 13px;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .field-input::placeholder {
+      color: var(--text-tertiary);
+      font-family: var(--mono);
+    }
+    .field-input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 1px var(--accent-blue);
+    }
+    .field-info {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    /* ── Banners ── */
     .error-banner {
-      display: none;
+      display: flex;
       align-items: flex-start;
       gap: 8px;
       background: var(--danger-muted);
@@ -257,11 +282,40 @@
       color: var(--danger);
       line-height: 1.4;
     }
-    .error-banner.visible { display: flex; }
     .error-banner svg { flex-shrink: 0; margin-top: 1px; }
 
-    /* ── Submit button ── */
-    .btn-login {
+    .info-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: rgba(59,130,246,0.1);
+      border: 1px solid rgba(59,130,246,0.25);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: var(--accent-blue);
+      line-height: 1.4;
+    }
+    .info-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+    .success-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: var(--success-muted);
+      border: 1px solid rgba(34,197,94,0.25);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: var(--success);
+      line-height: 1.4;
+    }
+    .success-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Buttons ── */
+    .btn-submit {
       width: 100%;
       margin-top: 24px;
       padding: 10px 16px;
@@ -279,21 +333,30 @@
       justify-content: center;
       gap: 8px;
     }
-    .btn-login:hover { filter: brightness(1.12); }
-    .btn-login:active { filter: brightness(0.95); }
+    .btn-submit:hover { filter: brightness(1.12); }
+    .btn-submit:active { filter: brightness(0.95); }
 
-    /* ── Back link ── */
-    .login-back {
+    .btn-link {
+      background: none;
+      border: none;
+      color: var(--accent-blue);
+      font-family: var(--font);
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .signup-back {
       margin-top: 20px;
       text-align: center;
       font-size: 12px;
       color: var(--text-tertiary);
     }
-    .login-back a {
+    .signup-back a {
       color: var(--accent-blue);
       text-decoration: none;
     }
-    .login-back a:hover { text-decoration: underline; }
+    .signup-back a:hover { text-decoration: underline; }
 
     /* ════════════════════════════════════════════════════════════
        FOOTER STATUS BAR
@@ -310,17 +373,6 @@
       gap: 12px;
     }
     .footer-spacer { flex: 1; }
-
-    /* ════════════════════════════════════════════════════════════
-       SCROLLBAR
-       ════════════════════════════════════════════════════════════ */
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb {
-      background: var(--border-default);
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
   </style>
 </head>
 
@@ -341,88 +393,184 @@
     </button>
   </header>
 
-  <!-- ════════ LOGIN CARD ════════ -->
-  <main class="login-wrapper">
-    <div class="login-card">
+  <!-- ════════ SIGNUP CARD ════════ -->
+  <main class="signup-wrapper">
+    <div class="signup-card">
 
       <!-- Brand mark -->
-      <div class="login-brand">
-        <div class="login-brand-icon">
+      <div class="signup-brand">
+        <div class="signup-brand-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0110 0v4"/>
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <line x1="19" y1="8" x2="19" y2="14"/>
+            <line x1="22" y1="11" x2="16" y2="11"/>
           </svg>
         </div>
-        <span class="login-brand-title">Sign in</span>
-        <span class="login-brand-sub">Access the QA Automation Engine</span>
+        <span class="signup-brand-title">Create Account</span>
+        <span class="signup-brand-sub">Register a new User Profile</span>
+      </div>
+
+      <!-- Steps Indicator -->
+      <div class="steps-indicator">
+        <div class="step-dot {% if step == 'email' or step == 'verify_otp' or step == 'register' %}active{% endif %} {% if step != 'email' %}completed{% endif %}"></div>
+        <div class="step-dot {% if step == 'verify_otp' or step == 'register' %}active{% endif %} {% if step == 'register' %}completed{% endif %}"></div>
+        <div class="step-dot {% if step == 'register' %}active{% endif %}"></div>
       </div>
 
       <!-- Card surface -->
-      <div class="login-surface">
-        <!-- Role Tabs -->
-        <div class="tabs-container">
-          <button type="button" class="tab-btn active" id="user-tab">Login as User</button>
-          <button type="button" class="tab-btn" id="admin-tab">Login as Admin</button>
-        </div>
-
-        <div class="login-section-title" id="form-section-title">Credentials</div>
-
-        <!-- Error banner: shown by server on bad credentials OR by JS for empty fields -->
-        {% if error %}
-        <div class="error-banner visible" id="login-error" role="alert">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          <span id="login-error-text">{{ error }}</span>
-        </div>
-        {% else %}
-        <div class="error-banner" id="login-error" role="alert">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          <span id="login-error-text">Invalid username or password.</span>
-        </div>
+      <div class="signup-surface">
+        
+        <!-- Step Titles -->
+        {% if step == 'email' %}
+          <div class="signup-section-title">
+            <span>Step 1: Contact Details</span>
+            <span class="signup-step-label">Email Verify</span>
+          </div>
+        {% elif step == 'verify_otp' %}
+          <div class="signup-section-title">
+            <span>Step 2: Security Validation</span>
+            <span class="signup-step-label">OTP Verification</span>
+          </div>
+        {% elif step == 'register' %}
+          <div class="signup-section-title">
+            <span>Step 3: Setup Account</span>
+            <span class="signup-step-label">Credentials</span>
+          </div>
         {% endif %}
 
-        <form id="login-form" method="POST" action="/login" novalidate>
-          <input type="hidden" name="role" id="role-hidden-input" value="user">
-
-          <div class="form-group">
-            <label for="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              placeholder="Username or Email"
-              autocomplete="username"
-              spellcheck="false"
-              required
-            >
-          </div>
-
-          <div class="form-group">
-            <label for="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              placeholder="••••••••"
-              autocomplete="current-password"
-              required
-            >
-          </div>
-
-          <button type="submit" class="btn-login" id="login-btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+        <!-- Error & Info Banners -->
+        {% if error %}
+          <div class="error-banner" role="alert">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
-            Sign in
-          </button>
-        </form>
+            <span>{{ error }}</span>
+          </div>
+        {% endif %}
+
+        {% if success_msg %}
+          <div class="success-banner">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span>{{ success_msg }}</span>
+          </div>
+        {% endif %}
+
+        {% if info %}
+          <div class="info-banner">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <span>{{ info }}</span>
+          </div>
+        {% endif %}
+
+        <!-- forms -->
+        {% if step == 'email' %}
+          <form method="POST" action="/signup">
+            <input type="hidden" name="action" value="send_otp">
+            <div class="field">
+              <label class="field-label" for="email">Email Address</label>
+              <input
+                class="field-input"
+                type="email"
+                id="email"
+                name="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required
+                autofocus
+              >
+              <p class="field-info">A 6-digit verification code will be sent to this email address.</p>
+            </div>
+            <button type="submit" class="btn-submit">
+              Get Verification Code
+            </button>
+          </form>
+
+        {% elif step == 'verify_otp' %}
+          <form method="POST" action="/signup">
+            <input type="hidden" name="action" value="verify_otp">
+            <div class="field">
+              <label class="field-label" for="otp_code">OTP Code</label>
+              <input
+                class="field-input"
+                type="text"
+                id="otp_code"
+                name="otp_code"
+                placeholder="000000"
+                autocomplete="one-time-code"
+                maxlength="6"
+                required
+                autofocus
+              >
+              <p class="field-info">Enter the 6-digit code printed in the backend console log.</p>
+            </div>
+            <button type="submit" class="btn-submit">
+              Verify Code
+            </button>
+          </form>
+
+          <form method="POST" action="/signup" style="margin-top: 16px; text-align: center;">
+            <input type="hidden" name="action" value="send_otp">
+            <input type="hidden" name="email" value="{{ email }}">
+            <span style="font-size: 12px; color: var(--text-tertiary)">Didn't get the code? </span>
+            <button type="submit" class="btn-link">Resend OTP</button>
+          </form>
+
+          <form method="POST" action="/signup" style="margin-top: 8px; text-align: center;">
+            <input type="hidden" name="action" value="restart">
+            <button type="submit" class="btn-link" style="color: var(--text-tertiary)">Use different email</button>
+          </form>
+
+        {% elif step == 'register' %}
+          <form method="POST" action="/signup">
+            <input type="hidden" name="action" value="register">
+            
+            <div class="field">
+              <label class="field-label">Verified Email</label>
+              <input class="field-input" type="text" value="{{ email }}" disabled style="opacity: 0.6; cursor: not-allowed;">
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="username">Choose Username</label>
+              <input
+                class="field-input"
+                type="text"
+                id="username"
+                name="username"
+                placeholder="johndoe"
+                autocomplete="username"
+                required
+                autofocus
+              >
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="password">Create Password</label>
+              <input
+                class="field-input"
+                type="password"
+                id="password"
+                name="password"
+                placeholder="••••••••"
+                autocomplete="new-password"
+                required
+              >
+            </div>
+
+            <button type="submit" class="btn-submit">
+              Complete Registration
+            </button>
+          </form>
+        {% endif %}
+
       </div>
 
-      <p class="login-back">
-        Don't have an account? <a href="/signup">Sign up</a>
+      <p class="signup-back">
+        Already have an account? <a href="/login">Sign in</a>
       </p>
     </div>
   </main>
@@ -448,41 +596,6 @@
       html.setAttribute("data-theme", next);
       localStorage.setItem("qa-theme", next);
       document.getElementById("theme-icon").textContent = next === "dark" ? "☀️" : "🌙";
-    });
-
-    function switchTab(role) {
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(role + '-tab').classList.add('active');
-        
-        const usernameInput = document.querySelector('input[name="username"]');
-        document.getElementById('role-hidden-input').value = role;
-        
-        if (role === 'admin') {
-            if (usernameInput) usernameInput.placeholder = 'Admin Username';
-        } else {
-            if (usernameInput) usernameInput.placeholder = 'Username or Email';
-        }
-    }
-
-    // Attach event listeners to tabs
-    document.getElementById('user-tab').addEventListener('click', () => switchTab('user'));
-    document.getElementById('admin-tab').addEventListener('click', () => switchTab('admin'));
-
-    // ── Basic client-side validation before submit ────────────────
-    document.getElementById("login-form").addEventListener("submit", (e) => {
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value;
-      const errEl    = document.getElementById("login-error");
-      const errText  = document.getElementById("login-error-text");
-
-      if (!username || !password) {
-        e.preventDefault();
-        errText.textContent = "Please enter both username and password.";
-        errEl.classList.add("visible");
-        return;
-      }
-
-      errEl.classList.remove("visible");
     });
   </script>
 </body>

@@ -6,11 +6,39 @@ import subprocess
 import threading
 import time
 import uuid
-from datetime import datetime
+import random
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import datetime, timedelta, timezone
 from flask import Flask, render_template, request, send_file, Response, jsonify, session, redirect, url_for
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-production")
+app.config['SESSION_PERMANENT'] = False
+
+@app.before_request
+def check_session_timeout():
+    # Enforce session clears on browser exit
+    session.permanent = False
+    
+    # Exclude static files and critical authentication endpoints
+    if request.endpoint in ['static', 'login', 'signup', 'logout']:
+        return
+        
+    if "username" in session:
+        last_activity_str = session.get("last_activity")
+        now = datetime.now(timezone.utc)
+        if last_activity_str:
+            try:
+                last_activity = datetime.fromisoformat(last_activity_str)
+                if now - last_activity > timedelta(minutes=30):
+                    session.clear()
+                    return redirect(url_for("login", error="Session expired due to inactivity."))
+            except Exception:
+                session.clear()
+                return redirect(url_for("login"))
+        session["last_activity"] = now.isoformat()
 
 # ──────────────────────────────────────────────
 #  Scan type → pytest file mapping
@@ -170,47 +198,376 @@ def home():
     return render_template("index.html")
 
 
+def send_otp_email(target_email, otp_code):
+    """
+    Sends an OTP verification code via Gmail SMTP server.
+    Reads SMTP_EMAIL and SMTP_PASSWORD from environment variables.
+    """
+    smtp_email = os.environ.get("SMTP_EMAIL")
+    smtp_password = os.environ.get("SMTP_PASSWORD")
+    
+    # Fallback if not configured
+    if not smtp_email or not smtp_password:
+        print(f"\n[WARNING] SMTP credentials not set (SMTP_EMAIL/SMTP_PASSWORD). Falling back to console.")
+        print(f"[MOCK EMAIL SERVICE] Sending OTP to {target_email}: {otp_code}\n")
+        return True
+
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = smtp_email
+        msg['To'] = target_email
+        msg['Subject'] = "QA Automation Engine - Verification Code"
+
+        body = f"Your verification code is: {otp_code}\nThis code will expire in 5 minutes."
+        msg.attach(MIMEText(body, 'plain'))
+
+        # Connect to Gmail SMTP on port 587
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(smtp_email, smtp_password)
+        server.sendmail(smtp_email, target_email, msg.as_string())
+        server.quit()
+        print(f"[SMTP] Successfully sent OTP verification email to {target_email}")
+        return True
+    except Exception as e:
+        print(f"[SMTP ERROR] Failed to send email to {target_email}: {e}")
+        return False
+
+
 DB_PATH = os.path.join(os.path.dirname(__file__), "users.db")
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    """Login page. GET renders the form; POST validates credentials and creates a session."""
-    # Already logged in — send straight to the dashboard
+    """Login page. GET renders the form; POST validates credentials and role, then creates session."""
     if "username" in session:
         return redirect(url_for("home"))
 
-    error = None
+    # Read inactivity timeout or other errors passed via query parameters
+    error = request.args.get("error")
 
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
+        selected_role = request.form.get("role", "user").strip()
 
         if not username or not password:
             error = "Please enter both username and password."
+        elif selected_role not in ["user", "admin"]:
+            error = "Invalid role selected."
         else:
-            # Query the database for a matching user
             try:
                 conn = sqlite3.connect(DB_PATH)
                 conn.row_factory = sqlite3.Row
                 row = conn.execute(
-                    "SELECT id, username, password FROM users WHERE username = ?",
-                    (username,),
+                    "SELECT id, username, password, role FROM users WHERE (username = ? OR email = ?)",
+                    (username, username),
                 ).fetchone()
                 conn.close()
 
-                if row and row["password"] == password:
-                    # Credentials match — create the session and redirect
-                    session["user_id"]  = row["id"]
-                    session["username"] = row["username"]
-                    return redirect(url_for("home"))
+                if row:
+                    if selected_role == "admin" and row["role"] == "user":
+                        error = "Access Denied: This account does not have Admin privileges."
+                    elif selected_role == "user" and row["role"] == "admin":
+                        error = "Please use the Admin login section to sign in as an administrator."
+                    elif row["password"] == password:
+                        session["user_id"] = row["id"]
+                        session["username"] = row["username"]
+                        session["role"] = row["role"]
+                        session["last_activity"] = datetime.now(timezone.utc).isoformat()
+                        return redirect(url_for("home"))
+                    else:
+                        error = "Invalid username or password."
                 else:
                     error = "Invalid username or password."
-
             except Exception as exc:
                 error = f"Database error: {exc}"
 
     return render_template("login.html", error=error)
+
+
+@app.route("/logout")
+def logout():
+    """Logs the user out and clears the session."""
+    session.clear()
+    return redirect(url_for("login"))
+
+
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    """Signup wizard with OTP verification."""
+    if "username" in session:
+        return redirect(url_for("home"))
+
+    step = session.get("signup_step", "email")
+    email = session.get("signup_email", "")
+    error = None
+    info = None
+    success_msg = None
+
+    if request.method == "POST":
+        action = request.form.get("action")
+
+        if action == "restart":
+            session.pop("signup_step", None)
+            session.pop("signup_email", None)
+            return redirect(url_for("signup"))
+
+        elif action == "send_otp":
+            input_email = request.form.get("email", "").strip().lower()
+            if not input_email:
+                error = "Please enter a valid email address."
+            else:
+                try:
+                    conn = sqlite3.connect(DB_PATH)
+                    # Check if email is already taken
+                    user_exists = conn.execute("SELECT 1 FROM users WHERE email = ?", (input_email,)).fetchone()
+                    if user_exists:
+                        error = "Email address is already registered."
+                        conn.close()
+                    else:
+                        # Check existing OTP generated within last 5 minutes
+                        conn.row_factory = sqlite3.Row
+                        row = conn.execute("SELECT otp_code, created_at FROM otp_store WHERE email = ?", (input_email,)).fetchone()
+                        
+                        now = datetime.now(timezone.utc)
+                        otp_code = None
+                        
+                        if row:
+                            try:
+                                created_at = datetime.fromisoformat(row["created_at"])
+                                if now - created_at < timedelta(minutes=5):
+                                    otp_code = row["otp_code"]
+                            except Exception:
+                                pass
+                        
+                        if not otp_code:
+                            otp_code = f"{random.randint(100000, 999999)}"
+                            conn.execute(
+                                "INSERT OR REPLACE INTO otp_store (email, otp_code, created_at) VALUES (?, ?, ?)",
+                                (input_email, otp_code, now.isoformat())
+                            )
+                            conn.commit()
+                        
+                        conn.close()
+                        
+                        if send_otp_email(input_email, otp_code):
+                            session["signup_email"] = input_email
+                            session["signup_step"] = "verify_otp"
+                            step = "verify_otp"
+                            email = input_email
+                            success_msg = "OTP sent successfully! Please check your email."
+                        else:
+                            error = "Failed to send OTP verification email. Please try again later."
+                except Exception as exc:
+                    error = f"Database error: {exc}"
+
+        elif action == "verify_otp":
+            otp_input = request.form.get("otp_code", "").strip()
+            if not email:
+                error = "Session expired. Please restart."
+                step = "email"
+            elif not otp_input:
+                error = "Please enter the verification code."
+            else:
+                try:
+                    conn = sqlite3.connect(DB_PATH)
+                    conn.row_factory = sqlite3.Row
+                    row = conn.execute("SELECT otp_code, created_at FROM otp_store WHERE email = ?", (email,)).fetchone()
+                    conn.close()
+
+                    if row and row["otp_code"] == otp_input:
+                        now = datetime.now(timezone.utc)
+                        created_at = datetime.fromisoformat(row["created_at"])
+                        if now - created_at < timedelta(minutes=5):
+                            session["signup_step"] = "register"
+                            step = "register"
+                            info = "Email verified successfully! Please choose credentials."
+                        else:
+                            error = "OTP expired. Please request a new one."
+                    else:
+                        error = "Invalid OTP. Please check the console log and try again."
+                except Exception as exc:
+                    error = f"Database error: {exc}"
+
+        elif action == "register":
+            username = request.form.get("username", "").strip()
+            password = request.form.get("password", "")
+
+            if not email or session.get("signup_step") != "register":
+                error = "Invalid flow. Please start signup again."
+                step = "email"
+            elif not username or not password:
+                error = "Please fill in all credential fields."
+            else:
+                try:
+                    conn = sqlite3.connect(DB_PATH)
+                    # Check if username is already taken
+                    exists = conn.execute("SELECT 1 FROM users WHERE username = ?", (username,)).fetchone()
+                    if exists:
+                        error = "Username is already taken."
+                        conn.close()
+                    else:
+                        cursor = conn.cursor()
+                        cursor.execute(
+                            "INSERT INTO users (email, username, password, role) VALUES (?, ?, ?, 'user')",
+                            (email, username, password)
+                        )
+                        new_user_id = cursor.lastrowid
+                        conn.commit()
+                        cursor.execute("DELETE FROM otp_store WHERE email = ?", (email,))
+                        conn.commit()
+                        conn.close()
+
+                        session.pop("signup_step", None)
+                        session.pop("signup_email", None)
+
+                        session["user_id"] = new_user_id
+                        session["username"] = username
+                        session["role"] = "user"
+                        session["last_activity"] = datetime.now(timezone.utc).isoformat()
+                        return redirect(url_for("home"))
+                except Exception as exc:
+                    error = f"Database error: {exc}"
+
+    return render_template("signup.html", step=step, email=email, error=error, info=info, success_msg=success_msg)
+
+
+@app.route("/admin/create_admin", methods=["GET", "POST"])
+def create_admin():
+    """Admin creation page. Requires existing admin session."""
+    if "username" not in session:
+        return redirect(url_for("login"))
+    if session.get("role") != "admin":
+        return "Access Denied: Admin privileges required.", 403
+
+    step = session.get("create_admin_step", "email")
+    email = session.get("create_admin_email", "")
+    error = None
+    info = None
+    success_msg = None
+
+    if request.method == "POST":
+        action = request.form.get("action")
+
+        if action == "restart":
+            session.pop("create_admin_step", None)
+            session.pop("create_admin_email", None)
+            return redirect(url_for("create_admin"))
+
+        elif action == "send_otp":
+            input_email = request.form.get("email", "").strip().lower()
+            if not input_email:
+                error = "Please enter a valid email address."
+            else:
+                try:
+                    conn = sqlite3.connect(DB_PATH)
+                    user_exists = conn.execute("SELECT 1 FROM users WHERE email = ?", (input_email,)).fetchone()
+                    if user_exists:
+                        error = "Email address is already registered."
+                        conn.close()
+                    else:
+                        # Check existing OTP generated within last 5 minutes
+                        conn.row_factory = sqlite3.Row
+                        row = conn.execute("SELECT otp_code, created_at FROM otp_store WHERE email = ?", (input_email,)).fetchone()
+                        
+                        now = datetime.now(timezone.utc)
+                        otp_code = None
+                        
+                        if row:
+                            try:
+                                created_at = datetime.fromisoformat(row["created_at"])
+                                if now - created_at < timedelta(minutes=5):
+                                    otp_code = row["otp_code"]
+                            except Exception:
+                                pass
+                        
+                        if not otp_code:
+                            otp_code = f"{random.randint(100000, 999999)}"
+                            conn.execute(
+                                "INSERT OR REPLACE INTO otp_store (email, otp_code, created_at) VALUES (?, ?, ?)",
+                                (input_email, otp_code, now.isoformat())
+                            )
+                            conn.commit()
+                        
+                        conn.close()
+                        
+                        if send_otp_email(input_email, otp_code):
+                            session["create_admin_email"] = input_email
+                            session["create_admin_step"] = "verify_otp"
+                            step = "verify_otp"
+                            email = input_email
+                            success_msg = "OTP sent successfully! Please check your email."
+                        else:
+                            error = "Failed to send OTP verification email. Please try again later."
+                except Exception as exc:
+                    error = f"Database error: {exc}"
+
+        elif action == "verify_otp":
+            otp_input = request.form.get("otp_code", "").strip()
+            if not email:
+                error = "Session expired. Please restart."
+                step = "email"
+            elif not otp_input:
+                error = "Please enter the verification code."
+            else:
+                try:
+                    conn = sqlite3.connect(DB_PATH)
+                    conn.row_factory = sqlite3.Row
+                    row = conn.execute("SELECT otp_code, created_at FROM otp_store WHERE email = ?", (email,)).fetchone()
+                    conn.close()
+
+                    if row and row["otp_code"] == otp_input:
+                        now = datetime.now(timezone.utc)
+                        created_at = datetime.fromisoformat(row["created_at"])
+                        if now - created_at < timedelta(minutes=5):
+                            session["create_admin_step"] = "register"
+                            step = "register"
+                            info = "OTP verified! You can now set credentials for the new administrator."
+                        else:
+                            error = "OTP expired. Please request a new one."
+                    else:
+                        error = "Invalid OTP. Please check the console log and try again."
+                except Exception as exc:
+                    error = f"Database error: {exc}"
+
+        elif action == "register":
+            username = request.form.get("username", "").strip()
+            password = request.form.get("password", "")
+
+            if not email or session.get("create_admin_step") != "register":
+                error = "Invalid flow step. Please start over."
+                step = "email"
+            elif not username or not password:
+                error = "Please fill in all credential fields."
+            else:
+                try:
+                    conn = sqlite3.connect(DB_PATH)
+                    exists = conn.execute("SELECT 1 FROM users WHERE username = ?", (username,)).fetchone()
+                    if exists:
+                        error = "Username is already taken."
+                        conn.close()
+                    else:
+                        cursor = conn.cursor()
+                        cursor.execute(
+                            "INSERT INTO users (email, username, password, role) VALUES (?, ?, ?, 'admin')",
+                            (email, username, password)
+                        )
+                        conn.commit()
+                        cursor.execute("DELETE FROM otp_store WHERE email = ?", (email,))
+                        conn.commit()
+                        conn.close()
+
+                        session.pop("create_admin_step", None)
+                        session.pop("create_admin_email", None)
+
+                        step = "email"
+                        email = ""
+                        success_msg = f"Successfully created new administrator profile '{username}'."
+                except Exception as exc:
+                    error = f"Database error: {exc}"
+
+    return render_template("create_admin.html", step=step, email=email, error=error, info=info, success_msg=success_msg)
 
 
 @app.route("/stream_scan")
