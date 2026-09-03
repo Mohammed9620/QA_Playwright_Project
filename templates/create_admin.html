@@ -8,133 +8,12 @@
   <meta name="description" content="Admin panel for QA Automation Engine.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   <style>
     /* ════════════════════════════════════════════════════════════
-       RESET & DESIGN TOKENS  (mirrors index.html palette exactly)
+       CREATE ADMIN — Page-specific styles
        ════════════════════════════════════════════════════════════ */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root,
-    [data-theme="dark"] {
-      --bg-primary:     #0d0814;
-      --bg-secondary:   #120b1c;
-      --bg-tertiary:    #181023;
-      --bg-elevated:    #20152c;
-      --border-default: #32243f;
-      --border-muted:   #24192f;
-      --text-primary:   #f2edf5;
-      --text-secondary: #a79cae;
-      --text-tertiary:  #75697f;
-      --accent-blue:    #9b6ac4;
-      --success:        #22c55e;
-      --success-muted:  rgba(34,197,94,0.15);
-      --danger:         #ef4444;
-      --danger-muted:   rgba(239,68,68,0.15);
-      --font:           'Inter', system-ui, -apple-system, sans-serif;
-      --mono:           'JetBrains Mono', 'Fira Code', monospace;
-      --radius:         0.625rem;
-      --radius-sm:      calc(var(--radius) * 0.6);
-      --transition:     0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      --glass-bg:       rgba(16,10,24,0.88);
-      color-scheme: dark;
-    }
-
-    [data-theme="light"] {
-      --bg-primary:     #faf8fc;
-      --bg-secondary:   #ffffff;
-      --bg-tertiary:    #f1ebf5;
-      --bg-elevated:    #e7ddec;
-      --border-default: #d9cde0;
-      --border-muted:   #eee7f2;
-      --text-primary:   #211629;
-      --text-secondary: #5f5268;
-      --text-tertiary:  #7d6f86;
-      --accent-blue:    #74479b;
-      --success:        #16a34a;
-      --success-muted:  rgba(22,163,74,0.1);
-      --danger:         #dc2626;
-      --danger-muted:   rgba(220,38,38,0.1);
-      --glass-bg:       rgba(250,248,252,0.88);
-      color-scheme: light;
-    }
-
-    html, body {
-      height: 100%;
-    }
-
-    body {
-      font-family: var(--font);
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      display: flex;
-      flex-direction: column;
-      font-size: 14px;
-      line-height: 1.5;
-      transition: background var(--transition), color var(--transition);
-    }
-
-    /* ════════════════════════════════════════════════════════════
-       TOP BAR
-       ════════════════════════════════════════════════════════════ */
-    .topbar {
-      height: 48px;
-      min-height: 48px;
-      background: var(--glass-bg);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border-default);
-      display: flex;
-      align-items: center;
-      padding: 0 16px;
-      gap: 12px;
-      z-index: 100;
-    }
-    .topbar-brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 600;
-      font-size: 14px;
-      color: var(--text-primary);
-      text-decoration: none;
-    }
-    .topbar-brand svg { flex-shrink: 0; }
-    .topbar-version {
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--text-tertiary);
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-default);
-      padding: 1px 6px;
-      border-radius: 10px;
-      letter-spacing: 0.02em;
-    }
-    .topbar-spacer { flex: 1; }
-    .theme-toggle {
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-default);
-      color: var(--text-secondary);
-      width: 32px;
-      height: 32px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      transition: all var(--transition);
-      padding: 0;
-      line-height: 1;
-    }
-    .theme-toggle:hover {
-      color: var(--text-primary);
-      border-color: var(--text-tertiary);
-      background: var(--bg-elevated);
-    }
-
-    /* ════════════════════════════════════════════════════════════
-       ADMIN CONTAINER
-       ════════════════════════════════════════════════════════════ */
     .admin-wrapper {
       flex: 1;
       display: flex;
@@ -179,171 +58,12 @@
       color: var(--text-secondary);
     }
 
-    /* ── Progress Indicators ── */
-    .steps-indicator {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      gap: 8px;
-    }
-    .step-dot {
-      flex: 1;
-      height: 4px;
-      background: var(--bg-tertiary);
-      border-radius: 2px;
-      transition: background var(--transition);
-    }
-    .step-dot.active {
-      background: var(--accent-blue);
-    }
-    .step-dot.completed {
-      background: var(--success);
-    }
-
     /* ── Card surface ── */
     .admin-surface {
       background: var(--bg-secondary);
       border: 1px solid var(--border-default);
       border-radius: var(--radius);
       padding: 28px 24px;
-    }
-
-    /* ── Section header inside card ── */
-    .admin-section-title {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: var(--text-tertiary);
-      margin-bottom: 20px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border-default);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .admin-step-label {
-      color: var(--accent-blue);
-      font-weight: 700;
-    }
-
-    /* ── Fields ── */
-    .field {
-      margin-bottom: 20px;
-    }
-    .field:last-of-type {
-      margin-bottom: 0;
-    }
-    .field-label {
-      display: block;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-primary);
-      margin-bottom: 8px;
-    }
-    .field-input {
-      width: 100%;
-      padding: 8px 12px;
-      background: var(--bg-primary);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-sm);
-      color: var(--text-primary);
-      font-family: var(--mono);
-      font-size: 13px;
-      outline: none;
-      transition: border-color var(--transition), box-shadow var(--transition);
-    }
-    .field-input::placeholder {
-      color: var(--text-tertiary);
-      font-family: var(--mono);
-    }
-    .field-input:focus {
-      border-color: var(--accent-blue);
-      box-shadow: 0 0 0 1px var(--accent-blue);
-    }
-    .field-info {
-      font-size: 11px;
-      color: var(--text-tertiary);
-      margin-top: 6px;
-      line-height: 1.4;
-    }
-
-    /* ── Banners ── */
-    .error-banner {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      background: var(--danger-muted);
-      border: 1px solid rgba(239,68,68,0.3);
-      border-radius: var(--radius-sm);
-      padding: 12px;
-      margin-bottom: 20px;
-      font-size: 13px;
-      color: var(--danger);
-      line-height: 1.4;
-    }
-    .error-banner svg { flex-shrink: 0; margin-top: 1px; }
-
-    .info-banner {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      background: rgba(155,106,196,0.1);
-      border: 1px solid rgba(155,106,196,0.25);
-      border-radius: var(--radius-sm);
-      padding: 12px;
-      margin-bottom: 20px;
-      font-size: 13px;
-      color: var(--accent-blue);
-      line-height: 1.4;
-    }
-    .info-banner svg { flex-shrink: 0; margin-top: 1px; }
-
-    .success-banner {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      background: var(--success-muted);
-      border: 1px solid rgba(34,197,94,0.25);
-      border-radius: var(--radius-sm);
-      padding: 12px;
-      margin-bottom: 20px;
-      font-size: 13px;
-      color: var(--success);
-      line-height: 1.4;
-    }
-    .success-banner svg { flex-shrink: 0; margin-top: 1px; }
-
-    /* ── Buttons ── */
-    .btn-submit {
-      width: 100%;
-      margin-top: 24px;
-      padding: 10px 16px;
-      border: 1px solid transparent;
-      border-radius: var(--radius-sm);
-      background: var(--accent-blue);
-      color: #ffffff;
-      font-family: var(--font);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: filter var(--transition);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .btn-submit:hover { filter: brightness(1.12); }
-    .btn-submit:active { filter: brightness(0.95); }
-
-    .btn-link {
-      background: none;
-      border: none;
-      color: var(--accent-blue);
-      font-family: var(--font);
-      font-size: 12px;
-      cursor: pointer;
-      text-decoration: underline;
     }
 
     .admin-back {
@@ -355,27 +75,26 @@
     .admin-back a {
       color: var(--accent-blue);
       text-decoration: none;
+      transition: color var(--duration-fast) var(--ease-out),
+                  opacity var(--duration-fast) var(--ease-out);
     }
     .admin-back a:hover { text-decoration: underline; }
+    .admin-back a:active { opacity: 0.72; }
 
     /* Interaction polish: visual feedback only; actions remain immediate. */
-    .theme-toggle, .btn-submit, .btn-link, .topbar a, .admin-back a {
-      transition: background-color 180ms ease-out, border-color 180ms ease-out,
-                  color 180ms ease-out, opacity 180ms ease-out,
-                  box-shadow 180ms ease-out, filter 180ms ease-out,
-                  transform 160ms ease-out;
+    .topbar a, .admin-back a {
+      transition: color var(--duration-fast) var(--ease-out),
+                  opacity var(--duration-fast) var(--ease-out),
+                  transform var(--duration-fast) var(--ease-out);
     }
-    .theme-toggle:active, .btn-submit:active, .btn-link:active { transform: translateY(1px); }
-    .theme-toggle:focus-visible, .btn-submit:focus-visible, .btn-link:focus-visible,
+    .topbar a:active, .admin-back a:active { transform: scale(0.97); opacity: .72; }
     .topbar a:focus-visible, .admin-back a:focus-visible {
       outline: 2px solid var(--accent-blue); outline-offset: 2px;
     }
-    .btn-link:hover, .topbar a:hover, .admin-back a:hover { color: var(--text-primary) !important; }
-    .btn-submit:disabled, .btn-link:disabled { cursor: not-allowed; opacity: .58; filter: saturate(.72); }
-    .topbar a:active, .admin-back a:active { opacity: .72; }
+    .topbar a:hover, .admin-back a:hover { color: var(--text-primary) !important; }
+
     @media (prefers-reduced-motion: reduce) {
-      .theme-toggle, .btn-submit, .btn-link { transition-duration: 160ms; }
-      .theme-toggle:active, .btn-submit:active, .btn-link:active { transform: none; filter: brightness(.94); }
+      .topbar a:active, .admin-back a:active { transform: none; }
     }
   </style>
 </head>
@@ -398,7 +117,7 @@
     </button>
   </header>
 
-  <!-- ════════ CONTAINER ════════ -->
+  <!-- ════════ ADMIN CONTAINER ════════ -->
   <main class="admin-wrapper">
     <div class="admin-card">
 
@@ -412,39 +131,33 @@
             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
         </div>
-        <span class="admin-header-title">Create Admin Console</span>
-        <span class="admin-header-sub">Provision a new Administrator profile</span>
+        <span class="admin-header-title">Admin Management</span>
+        <span class="admin-header-sub">Superuser control panel</span>
       </div>
 
       <!-- Steps Indicator -->
       <div class="steps-indicator">
-        <div class="step-dot {% if step == 'email' or step == 'verify_otp' or step == 'register' %}active{% endif %} {% if step != 'email' %}completed{% endif %}"></div>
-        <div class="step-dot {% if step == 'verify_otp' or step == 'register' %}active{% endif %} {% if step == 'register' %}completed{% endif %}"></div>
-        <div class="step-dot {% if step == 'register' %}active{% endif %}"></div>
+        <div class="step-dot {% if step == 'verify_admin' or step == 'create_admin' %}active{% endif %} {% if step == 'create_admin' %}completed{% endif %}"></div>
+        <div class="step-dot {% if step == 'create_admin' %}active{% endif %}"></div>
       </div>
 
       <!-- Card surface -->
       <div class="admin-surface">
-        
+
         <!-- Step Titles -->
-        {% if step == 'email' %}
-          <div class="signup-section-title">
-            <span>Step 1: Admin Invitation</span>
-            <span class="admin-step-label">Email Verify</span>
+        {% if step == 'verify_admin' %}
+          <div class="card-section-title">
+            <span>Security</span>
+            <span class="card-step-label">Authentication</span>
           </div>
-        {% elif step == 'verify_otp' %}
-          <div class="signup-section-title">
-            <span>Step 2: Admin Validation</span>
-            <span class="admin-step-label">OTP Verification</span>
-          </div>
-        {% elif step == 'register' %}
-          <div class="signup-section-title">
-            <span>Step 3: Setup Profile</span>
-            <span class="admin-step-label">Credentials</span>
+        {% elif step == 'create_admin' %}
+          <div class="card-section-title">
+            <span>Setup</span>
+            <span class="card-step-label">New Admin</span>
           </div>
         {% endif %}
 
-        <!-- Banners -->
+        <!-- Error & Info Banners -->
         {% if error %}
           <div class="error-banner" role="alert">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -463,107 +176,62 @@
           </div>
         {% endif %}
 
-        {% if info %}
-          <div class="info-banner">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
-            </svg>
-            <span>{{ info }}</span>
-          </div>
-        {% endif %}
-
         <!-- Forms -->
-        {% if step == 'email' %}
+        {% if step == 'verify_admin' %}
           <form method="POST" action="/admin/create_admin">
-            <input type="hidden" name="action" value="send_otp">
+            <input type="hidden" name="action" value="verify">
             <div class="field">
-              <label class="field-label" for="email">New Admin Email</label>
-              <input
-                class="field-input"
-                type="email"
-                id="email"
-                name="email"
-                placeholder="newadmin@example.com"
-                required
-                autofocus
-              >
-              <p class="field-info">Enter the email address for the new administrator. A 6-digit OTP code will be sent to confirm ownership.</p>
-            </div>
-            <button type="submit" class="btn-submit">
-              Send Admin OTP Code
-            </button>
-          </form>
-
-        {% elif step == 'verify_otp' %}
-          <form method="POST" action="/admin/create_admin">
-            <input type="hidden" name="action" value="verify_otp">
-            <div class="field">
-              <label class="field-label" for="otp_code">OTP Verification Code</label>
-              <input
-                class="field-input"
-                type="text"
-                id="otp_code"
-                name="otp_code"
-                placeholder="000000"
-                maxlength="6"
-                required
-                autofocus
-              >
-              <p class="field-info">Enter the 6-digit code printed in the backend console log.</p>
-            </div>
-            <button type="submit" class="btn-submit">
-              Confirm OTP Code
-            </button>
-          </form>
-
-          <form method="POST" action="/admin/create_admin" style="margin-top: 16px; text-align: center;">
-            <input type="hidden" name="action" value="send_otp">
-            <input type="hidden" name="email" value="{{ email }}">
-            <span style="font-size: 12px; color: var(--text-tertiary)">Didn't get the code? </span>
-            <button type="submit" class="btn-link">Resend OTP</button>
-          </form>
-
-          <form method="POST" action="/admin/create_admin" style="margin-top: 8px; text-align: center;">
-            <input type="hidden" name="action" value="restart">
-            <button type="submit" class="btn-link" style="color: var(--text-tertiary)">Use different email</button>
-          </form>
-
-        {% elif step == 'register' %}
-          <form method="POST" action="/admin/create_admin">
-            <input type="hidden" name="action" value="register">
-            
-            <div class="field">
-              <label class="field-label">Verified Email</label>
-              <input class="field-input" type="text" value="{{ email }}" disabled style="opacity: 0.6; cursor: not-allowed;">
-            </div>
-
-            <div class="field">
-              <label class="field-label" for="username">Admin Username</label>
-              <input
-                class="field-input"
-                type="text"
-                id="username"
-                name="username"
-                placeholder="super_admin"
-                required
-                autofocus
-              >
-            </div>
-
-            <div class="field">
-              <label class="field-label" for="password">Admin Password</label>
+              <label class="field-label" for="current_password">Your Current Password</label>
               <input
                 class="field-input"
                 type="password"
-                id="password"
-                name="password"
+                id="current_password"
+                name="current_password"
                 placeholder="••••••••"
                 required
+                autofocus
+              >
+              <p class="field-info">Confirm your identity to authorize the creation of a new administrator.</p>
+            </div>
+            <button type="submit" class="btn-submit">
+              Authenticate
+            </button>
+          </form>
+
+        {% elif step == 'create_admin' %}
+          <form method="POST" action="/admin/create_admin">
+            <input type="hidden" name="action" value="create">
+
+            <div class="field">
+              <label class="field-label" for="new_admin_user">New Admin Username</label>
+              <input
+                class="field-input"
+                type="text"
+                id="new_admin_user"
+                name="new_admin_user"
+                placeholder="admin_jane"
+                autocomplete="off"
+                required
+                autofocus
               >
             </div>
 
+            <div class="field">
+              <label class="field-label" for="new_admin_pass">New Admin Password</label>
+              <input
+                class="field-input"
+                type="password"
+                id="new_admin_pass"
+                name="new_admin_pass"
+                placeholder="••••••••"
+                autocomplete="new-password"
+                required
+              >
+              <p class="field-info">Must be at least 8 characters.</p>
+            </div>
+
             <button type="submit" class="btn-submit">
-              Create Admin Profile
+              Create Admin User
             </button>
           </form>
         {% endif %}
@@ -571,19 +239,14 @@
       </div>
 
       <p class="admin-back">
-        <a href="/">&larr; Return to Dashboard</a>
+        Return to <a href="/">Dashboard</a>
       </p>
+
     </div>
   </main>
 
-  <!-- ════════ FOOTER STATUS BAR ════════ -->
-  <footer class="footer-bar">
-    <div class="footer-spacer"></div>
-  </footer>
-
   <!-- ════════ JAVASCRIPT ════════ -->
   <script>
-    // ── Theme Toggle ─────────────────────────────────────────────
     (function initTheme() {
       const saved = localStorage.getItem("qa-theme") || "dark";
       document.documentElement.setAttribute("data-theme", saved);

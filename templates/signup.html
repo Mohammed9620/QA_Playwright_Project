@@ -8,132 +8,10 @@
   <meta name="description" content="Sign up for the QA Automation Engine.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   <style>
     /* ════════════════════════════════════════════════════════════
-       RESET & DESIGN TOKENS  (mirrors index.html palette exactly)
-       ════════════════════════════════════════════════════════════ */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root,
-    [data-theme="dark"] {
-      --bg-primary:     #0d0814;
-      --bg-secondary:   #120b1c;
-      --bg-tertiary:    #181023;
-      --bg-elevated:    #20152c;
-      --border-default: #32243f;
-      --border-muted:   #24192f;
-      --text-primary:   #f2edf5;
-      --text-secondary: #a79cae;
-      --text-tertiary:  #75697f;
-      --accent-blue:    #9b6ac4;
-      --success:        #22c55e;
-      --success-muted:  rgba(34,197,94,0.15);
-      --danger:         #ef4444;
-      --danger-muted:   rgba(239,68,68,0.15);
-      --font:           'Inter', system-ui, -apple-system, sans-serif;
-      --mono:           'JetBrains Mono', 'Fira Code', monospace;
-      --radius:         0.625rem;
-      --radius-sm:      calc(var(--radius) * 0.6);
-      --transition:     0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      --glass-bg:       rgba(16,10,24,0.88);
-      color-scheme: dark;
-    }
-
-    [data-theme="light"] {
-      --bg-primary:     #faf8fc;
-      --bg-secondary:   #ffffff;
-      --bg-tertiary:    #f1ebf5;
-      --bg-elevated:    #e7ddec;
-      --border-default: #d9cde0;
-      --border-muted:   #eee7f2;
-      --text-primary:   #211629;
-      --text-secondary: #5f5268;
-      --text-tertiary:  #7d6f86;
-      --accent-blue:    #74479b;
-      --success:        #16a34a;
-      --success-muted:  rgba(22,163,74,0.1);
-      --danger:         #dc2626;
-      --danger-muted:   rgba(220,38,38,0.1);
-      --glass-bg:       rgba(250,248,252,0.88);
-      color-scheme: light;
-    }
-
-    html, body {
-      height: 100%;
-    }
-
-    body {
-      font-family: var(--font);
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      display: flex;
-      flex-direction: column;
-      font-size: 14px;
-      line-height: 1.5;
-      transition: background var(--transition), color var(--transition);
-    }
-
-    /* ════════════════════════════════════════════════════════════
-       TOP BAR
-       ════════════════════════════════════════════════════════════ */
-    .topbar {
-      height: 48px;
-      min-height: 48px;
-      background: var(--glass-bg);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border-default);
-      display: flex;
-      align-items: center;
-      padding: 0 16px;
-      gap: 12px;
-      z-index: 100;
-    }
-    .topbar-brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 600;
-      font-size: 14px;
-      color: var(--text-primary);
-      text-decoration: none;
-    }
-    .topbar-brand svg { flex-shrink: 0; }
-    .topbar-version {
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--text-tertiary);
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-default);
-      padding: 1px 6px;
-      border-radius: 10px;
-      letter-spacing: 0.02em;
-    }
-    .topbar-spacer { flex: 1; }
-    .theme-toggle {
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-default);
-      color: var(--text-secondary);
-      width: 32px;
-      height: 32px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      transition: all var(--transition);
-      padding: 0;
-      line-height: 1;
-    }
-    .theme-toggle:hover {
-      color: var(--text-primary);
-      border-color: var(--text-tertiary);
-      background: var(--bg-elevated);
-    }
-
-    /* ════════════════════════════════════════════════════════════
-       SIGNUP CARD LAYOUT
+       SIGNUP — Page-specific styles
        ════════════════════════════════════════════════════════════ */
     .signup-wrapper {
       flex: 1;
@@ -142,7 +20,6 @@
       justify-content: center;
       padding: 40px 16px;
     }
-
     .signup-card {
       width: 100%;
       max-width: 420px;
@@ -179,27 +56,6 @@
       color: var(--text-secondary);
     }
 
-    /* ── Progress Indicators ── */
-    .steps-indicator {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      gap: 8px;
-    }
-    .step-dot {
-      flex: 1;
-      height: 4px;
-      background: var(--bg-tertiary);
-      border-radius: 2px;
-      transition: background var(--transition);
-    }
-    .step-dot.active {
-      background: var(--accent-blue);
-    }
-    .step-dot.completed {
-      background: var(--success);
-    }
-
     /* ── Card surface ── */
     .signup-surface {
       background: var(--bg-secondary);
@@ -208,144 +64,7 @@
       padding: 28px 24px;
     }
 
-    /* ── Section header inside card ── */
-    .signup-section-title {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: var(--text-tertiary);
-      margin-bottom: 20px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border-default);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .signup-step-label {
-      color: var(--accent-blue);
-      font-weight: 700;
-    }
-
-    /* ── Fields ── */
-    .field {
-      margin-bottom: 20px;
-    }
-    .field:last-of-type {
-      margin-bottom: 0;
-    }
-    .field-label {
-      display: block;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-primary);
-      margin-bottom: 8px;
-    }
-    .field-input {
-      width: 100%;
-      padding: 8px 12px;
-      background: var(--bg-primary);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-sm);
-      color: var(--text-primary);
-      font-family: var(--mono);
-      font-size: 13px;
-      outline: none;
-      transition: border-color var(--transition), box-shadow var(--transition);
-    }
-    .field-input::placeholder {
-      color: var(--text-tertiary);
-      font-family: var(--mono);
-    }
-    .field-input:focus {
-      border-color: var(--accent-blue);
-      box-shadow: 0 0 0 1px var(--accent-blue);
-    }
-    .field-info {
-      font-size: 11px;
-      color: var(--text-tertiary);
-      margin-top: 6px;
-      line-height: 1.4;
-    }
-
-    /* ── Banners ── */
-    .error-banner {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      background: var(--danger-muted);
-      border: 1px solid rgba(239,68,68,0.3);
-      border-radius: var(--radius-sm);
-      padding: 12px;
-      margin-bottom: 20px;
-      font-size: 13px;
-      color: var(--danger);
-      line-height: 1.4;
-    }
-    .error-banner svg { flex-shrink: 0; margin-top: 1px; }
-
-    .info-banner {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      background: rgba(155,106,196,0.1);
-      border: 1px solid rgba(155,106,196,0.25);
-      border-radius: var(--radius-sm);
-      padding: 12px;
-      margin-bottom: 20px;
-      font-size: 13px;
-      color: var(--accent-blue);
-      line-height: 1.4;
-    }
-    .info-banner svg { flex-shrink: 0; margin-top: 1px; }
-
-    .success-banner {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      background: var(--success-muted);
-      border: 1px solid rgba(34,197,94,0.25);
-      border-radius: var(--radius-sm);
-      padding: 12px;
-      margin-bottom: 20px;
-      font-size: 13px;
-      color: var(--success);
-      line-height: 1.4;
-    }
-    .success-banner svg { flex-shrink: 0; margin-top: 1px; }
-
-    /* ── Buttons ── */
-    .btn-submit {
-      width: 100%;
-      margin-top: 24px;
-      padding: 10px 16px;
-      border: 1px solid transparent;
-      border-radius: var(--radius-sm);
-      background: var(--accent-blue);
-      color: #ffffff;
-      font-family: var(--font);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: filter var(--transition);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .btn-submit:hover { filter: brightness(1.12); }
-    .btn-submit:active { filter: brightness(0.95); }
-
-    .btn-link {
-      background: none;
-      border: none;
-      color: var(--accent-blue);
-      font-family: var(--font);
-      font-size: 12px;
-      cursor: pointer;
-      text-decoration: underline;
-    }
-
+    /* ── Back link ── */
     .signup-back {
       margin-top: 20px;
       text-align: center;
@@ -355,44 +74,11 @@
     .signup-back a {
       color: var(--accent-blue);
       text-decoration: none;
+      transition: color var(--duration-fast) var(--ease-out),
+                  opacity var(--duration-fast) var(--ease-out);
     }
     .signup-back a:hover { text-decoration: underline; }
-
-    /* ════════════════════════════════════════════════════════════
-       FOOTER STATUS BAR
-       ════════════════════════════════════════════════════════════ */
-    .footer-bar {
-      height: 28px;
-      background: var(--bg-secondary);
-      border-top: 1px solid var(--border-default);
-      display: flex;
-      align-items: center;
-      padding: 0 16px;
-      font-size: 11px;
-      color: var(--text-tertiary);
-      gap: 12px;
-    }
-    .footer-spacer { flex: 1; }
-
-    /* Interaction polish: visual feedback only; actions remain immediate. */
-    .theme-toggle, .btn-submit, .btn-link {
-      transition: background-color 180ms ease-out, border-color 180ms ease-out,
-                  color 180ms ease-out, opacity 180ms ease-out,
-                  box-shadow 180ms ease-out, filter 180ms ease-out,
-                  transform 160ms ease-out;
-    }
-    .theme-toggle:active, .btn-submit:active, .btn-link:active { transform: translateY(1px); }
-    .theme-toggle:focus-visible, .btn-submit:focus-visible, .btn-link:focus-visible {
-      outline: 2px solid var(--accent-blue); outline-offset: 2px;
-    }
-    .btn-link:hover { color: var(--text-primary); }
-    .btn-submit:disabled, .btn-link:disabled { cursor: not-allowed; opacity: .58; filter: saturate(.72); }
-    .topbar-brand, .signup-back a { transition: color 180ms ease-out, opacity 180ms ease-out; }
-    .topbar-brand:active, .signup-back a:active { opacity: .72; }
-    @media (prefers-reduced-motion: reduce) {
-      .theme-toggle, .btn-submit, .btn-link { transition-duration: 160ms; }
-      .theme-toggle:active, .btn-submit:active, .btn-link:active { transform: none; filter: brightness(.94); }
-    }
+    .signup-back a:active { opacity: 0.72; }
   </style>
 </head>
 
@@ -443,19 +129,19 @@
         
         <!-- Step Titles -->
         {% if step == 'email' %}
-          <div class="signup-section-title">
+          <div class="card-section-title">
             <span>Step 1: Contact Details</span>
-            <span class="signup-step-label">Email Verify</span>
+            <span class="card-step-label">Email Verify</span>
           </div>
         {% elif step == 'verify_otp' %}
-          <div class="signup-section-title">
+          <div class="card-section-title">
             <span>Step 2: Security Validation</span>
-            <span class="signup-step-label">OTP Verification</span>
+            <span class="card-step-label">OTP Verification</span>
           </div>
         {% elif step == 'register' %}
-          <div class="signup-section-title">
+          <div class="card-section-title">
             <span>Step 3: Setup Account</span>
-            <span class="signup-step-label">Credentials</span>
+            <span class="card-step-label">Credentials</span>
           </div>
         {% endif %}
 
