@@ -16,17 +16,17 @@
 
     :root,
     [data-theme="dark"] {
-      --bg-primary:     #09090b;
-      --bg-secondary:   #0a0a0a;
-      --bg-tertiary:    #171717;
-      --bg-elevated:    #1c1c1c;
-      --border-default: #27272a;
-      --border-muted:   #1c1c1c;
-      --text-primary:   #fafafa;
-      --text-secondary: #a1a1aa;
-      --text-tertiary:  #71717a;
-      --accent-blue:    #3b82f6;
-      --accent-purple:  #a78bfa;
+      --bg-primary:     #0d0814;
+      --bg-secondary:   #120b1c;
+      --bg-tertiary:    #181023;
+      --bg-elevated:    #20152c;
+      --border-default: #32243f;
+      --border-muted:   #24192f;
+      --text-primary:   #f2edf5;
+      --text-secondary: #a79cae;
+      --text-tertiary:  #75697f;
+      --accent-blue:    #9b6ac4;
+      --accent-purple:  #b58ad1;
       --success:        #22c55e;
       --success-muted:  rgba(34,197,94,0.15);
       --danger:         #ef4444;
@@ -40,35 +40,35 @@
       --radius-md:      calc(var(--radius) * 0.8);
       --radius-lg:      var(--radius);
       --transition:     0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      --ring:           rgba(59,130,246,0.4);
+      --ring:           rgba(155,106,196,0.32);
       --glow-success:   rgba(34,197,94,0.3);
       --glow-danger:    rgba(239,68,68,0.3);
-      --glass-bg:       rgba(10,10,10,0.75);
+      --glass-bg:       rgba(16,10,24,0.88);
       color-scheme: dark;
     }
 
     [data-theme="light"] {
-      --bg-primary:     #ffffff;
-      --bg-secondary:   #fafafa;
-      --bg-tertiary:    #f4f4f5;
-      --bg-elevated:    #e4e4e7;
-      --border-default: #e4e4e7;
-      --border-muted:   #f4f4f5;
-      --text-primary:   #09090b;
-      --text-secondary: #52525b;
-      --text-tertiary:  #71717a;
-      --accent-blue:    #2563eb;
-      --accent-purple:  #7c3aed;
+      --bg-primary:     #faf8fc;
+      --bg-secondary:   #ffffff;
+      --bg-tertiary:    #f1ebf5;
+      --bg-elevated:    #e7ddec;
+      --border-default: #d9cde0;
+      --border-muted:   #eee7f2;
+      --text-primary:   #211629;
+      --text-secondary: #5f5268;
+      --text-tertiary:  #7d6f86;
+      --accent-blue:    #74479b;
+      --accent-purple:  #74479b;
       --success:        #16a34a;
       --success-muted:  rgba(22,163,74,0.1);
       --danger:         #dc2626;
       --danger-muted:   rgba(220,38,38,0.1);
       --warning:        #ca8a04;
       --warning-muted:  rgba(202,138,4,0.1);
-      --ring:           rgba(37,99,235,0.3);
+      --ring:           rgba(116,71,155,0.25);
       --glow-success:   rgba(22,163,74,0.2);
       --glow-danger:    rgba(220,38,38,0.2);
-      --glass-bg:       rgba(250,250,250,0.75);
+      --glass-bg:       rgba(250,248,252,0.88);
       color-scheme: light;
     }
 
@@ -293,12 +293,43 @@
       overflow: hidden;
     }
     .pass-rate-fill {
+      position: relative;
+      width: 100%;
       height: 100%;
       border-radius: 4px;
-      transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+      transform: scaleX(0);
+      transform-origin: left center;
+      will-change: transform;
     }
-    .pass-rate-fill.good { background: var(--success); }
-    .pass-rate-fill.bad { background: var(--danger); }
+    .pass-rate-fill::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 12px;
+      height: 100%;
+      border-radius: inherit;
+      background: rgba(255,255,255,0.62);
+      box-shadow: 0 0 8px currentColor;
+      opacity: 0.72;
+    }
+    .pass-rate-fill.good { background: var(--success); color: var(--success); }
+    .pass-rate-fill.bad { background: var(--danger); color: var(--danger); }
+    @media (prefers-reduced-motion: reduce) {
+      .pass-rate-fill::after { opacity: 0.38; box-shadow: 0 0 3px currentColor; }
+    }
+
+    /* Localized pointer-direction border treatment for result summaries. */
+    .directional-glow { --glow-angle: 0deg; --glow-opacity: 0; position: relative; isolation: isolate; }
+    .directional-glow::after {
+      content: ""; position: absolute; inset: -1px; padding: 1px; border-radius: inherit;
+      pointer-events: none; z-index: 5; opacity: var(--glow-opacity);
+      background: conic-gradient(from var(--glow-angle), transparent 0deg 310deg, rgba(128,79,158,0.12) 322deg, rgba(190,148,211,0.78) 338deg, rgba(151,99,183,0.46) 352deg, transparent 360deg);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude; will-change: opacity, background;
+    }
+    @media (prefers-reduced-motion: reduce) { .directional-glow::after { filter: saturate(0.78); } }
+    @media (hover: none), (pointer: coarse), (max-width: 768px) { .directional-glow::after { display: none; } }
 
     /* Donut chart */
     .donut-section {
@@ -443,7 +474,32 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 4px; }
 
+    /* Interaction polish: visual feedback only; links navigate immediately. */
+    .theme-toggle, .btn, .topbar a {
+      transition: background-color 180ms ease-out, border-color 180ms ease-out,
+                  color 180ms ease-out, opacity 180ms ease-out,
+                  box-shadow 180ms ease-out, filter 180ms ease-out,
+                  transform 160ms ease-out;
+    }
+    .theme-toggle:active, .btn:active, .topbar a:active { transform: translateY(1px); }
+    .theme-toggle:focus-visible, .btn:focus-visible, .topbar a:focus-visible {
+      outline: 2px solid var(--accent-blue); outline-offset: 2px;
+    }
+    .topbar a:hover { color: var(--text-primary) !important; }
+    .btn:disabled { cursor: not-allowed; opacity: .55; }
+    @media (prefers-reduced-motion: reduce) {
+      .theme-toggle, .btn, .topbar a { transition-duration: 160ms; }
+      .theme-toggle:active, .btn:active, .topbar a:active { transform: none; filter: brightness(.94); }
+      .btn-primary:hover { transform: none; }
+    }
+
     @media (max-width: 600px) {
+      .topbar { padding: 0 10px; gap: 8px; }
+      .topbar-version,
+      .topbar-nav { display: none; }
+      .topbar-brand { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+      .theme-toggle { flex: 0 0 32px; }
+      .content { padding-left: 16px; padding-right: 16px; }
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
       .donut-section { flex-direction: column; text-align: center; }
       .actions { flex-direction: column; }
@@ -538,10 +594,10 @@
     {% if summary.total > 0 %}
     {% set pct = ((summary.passed / summary.total) * 100) | round(1) %}
     {% set fail_pct = (((summary.failed + summary.error) / summary.total) * 100) | round(1) %}
-    <div class="donut-section">
-      <div class="donut" id="donut" style="background: conic-gradient(var(--success) 0% {{ pct }}%, var(--danger) {{ pct }}% {{ pct + fail_pct }}%, var(--bg-tertiary) {{ pct + fail_pct }}% 100%);">
+    <div class="donut-section directional-glow">
+      <div class="donut" id="donut" data-target="{{ pct }}" data-fail-target="{{ fail_pct }}" style="background: conic-gradient(var(--bg-tertiary) 0% 100%);">
         <div class="donut-center">
-          <div class="donut-pct" style="color: {{ 'var(--success)' if pct >= 80 else 'var(--danger)' }}">{{ pct | int }}%</div>
+          <div class="donut-pct" style="color: {{ 'var(--success)' if pct >= 80 else 'var(--danger)' }}">0%</div>
           <div class="donut-pct-label">Pass Rate</div>
         </div>
       </div>
@@ -567,13 +623,13 @@
     </div>
 
     <!-- Pass Rate Bar -->
-    <div class="pass-rate-section">
+    <div class="pass-rate-section directional-glow">
       <div class="pass-rate-header">
         <span>Pass Rate</span>
-        <span class="pass-rate-pct">{{ pct }}%</span>
+        <span class="pass-rate-pct" id="results-pass-rate-pct">0%</span>
       </div>
       <div class="pass-rate-track">
-        <div class="pass-rate-fill {{ 'good' if pct >= 80 else 'bad' }}" style="width: {{ pct }}%"></div>
+        <div class="pass-rate-fill {{ 'good' if pct >= 80 else 'bad' }}" id="results-pass-rate-fill" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-target="{{ pct }}"></div>
       </div>
     </div>
     {% endif %}
@@ -608,6 +664,113 @@
   </footer>
 
   <script>
+    (function initDirectionalGlows() {
+      if (window.matchMedia("(hover: none), (pointer: coarse), (max-width: 768px)").matches) return;
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+      const states = Array.from(document.querySelectorAll(".directional-glow"), element => ({ element, rect: null, angle: 0, targetAngle: 0, opacity: 0, targetOpacity: 0 }));
+      let x = -1000, y = -1000, frame = null;
+      function refresh() { states.forEach(s => { const r = s.element.getBoundingClientRect(); s.rect = r.width && r.height ? r : null; }); }
+      function targets() {
+        states.forEach(s => {
+          if (!s.rect) { s.targetOpacity = 0; return; }
+          const r=s.rect, dx=Math.max(r.left-x,0,x-r.right), dy=Math.max(r.top-y,0,y-r.bottom), distance=Math.hypot(dx,dy);
+          s.targetAngle=Math.atan2(y-r.top-r.height/2,x-r.left-r.width/2)*180/Math.PI+90;
+          s.targetOpacity=distance<72?(reduced.matches?0.34:0.58)*(1-distance/72):0;
+        });
+      }
+      function animate() {
+        const smoothing=reduced.matches?0.28:0.16; let unsettled=false;
+        states.forEach(s => {
+          let delta=((s.targetAngle-s.angle+540)%360)-180;
+          if(reduced.matches) delta=Math.max(-22,Math.min(22,delta));
+          s.angle+=delta*smoothing; s.opacity+=(s.targetOpacity-s.opacity)*smoothing;
+          if(Math.abs(delta)>0.12||Math.abs(s.targetOpacity-s.opacity)>0.004) unsettled=true;
+          s.element.style.setProperty("--glow-angle",`${s.angle}deg`); s.element.style.setProperty("--glow-opacity",s.opacity.toFixed(3));
+        });
+        frame=unsettled?requestAnimationFrame(animate):null;
+      }
+      function requestFrame(){ if(frame===null) frame=requestAnimationFrame(animate); }
+      document.addEventListener("pointermove",event=>{x=event.clientX;y=event.clientY;targets();requestFrame();},{passive:true});
+      const observer=new ResizeObserver(()=>{refresh();targets();requestFrame();}); states.forEach(s=>observer.observe(s.element));
+      window.addEventListener("resize",refresh,{passive:true}); window.addEventListener("scroll",refresh,{passive:true});
+      window.addEventListener("pagehide",()=>{if(frame!==null)cancelAnimationFrame(frame);observer.disconnect();},{once:true}); refresh();
+    })();
+
+    function createResultsProgressController(fillEl, textEl, donutEl, donutTextEl) {
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+      let displayed = 0;
+      let target = 0;
+      let failTarget = 0;
+      let animationFrame = null;
+      let lastTime = 0;
+
+      function render() {
+        const bounded = Math.max(0, Math.min(100, displayed));
+        const rounded = Math.round(bounded);
+        fillEl.style.transform = `scaleX(${bounded / 100})`;
+        fillEl.setAttribute("aria-valuenow", String(rounded));
+        textEl.textContent = `${rounded}%`;
+        donutTextEl.textContent = `${rounded}%`;
+
+        const revealRatio = target > 0 ? Math.min(1, bounded / target) : 1;
+        const failEnd = Math.min(100, bounded + failTarget * revealRatio);
+        donutEl.style.background = `conic-gradient(var(--success) 0% ${bounded}%, var(--danger) ${bounded}% ${failEnd}%, var(--bg-tertiary) ${failEnd}% 100%)`;
+      }
+
+      function tick(now) {
+        const delta = Math.min(64, lastTime ? now - lastTime : 16.67);
+        lastTime = now;
+        const response = reducedMotion.matches ? 20 : 8;
+        const blend = 1 - Math.exp(-response * delta / 1000);
+        displayed += (target - displayed) * blend;
+
+        if (Math.abs(target - displayed) < 0.04) {
+          displayed = target;
+          render();
+          animationFrame = null;
+          lastTime = 0;
+          return;
+        }
+
+        render();
+        animationFrame = requestAnimationFrame(tick);
+      }
+
+      function setTarget(value, failureValue = 0, immediate = false) {
+        target = Math.max(0, Math.min(100, Number(value) || 0));
+        failTarget = Math.max(0, Math.min(100 - target, Number(failureValue) || 0));
+        if (immediate) {
+          if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+          animationFrame = null;
+          lastTime = 0;
+          displayed = target;
+          render();
+          return;
+        }
+        if (animationFrame === null) animationFrame = requestAnimationFrame(tick);
+      }
+
+      fillEl.updateProgress = setTarget;
+      window.addEventListener("pagehide", () => {
+        if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+      }, { once: true });
+      render();
+      return { setTarget, getDisplayed: () => displayed, getTarget: () => target };
+    }
+
+    const resultsFill = document.getElementById("results-pass-rate-fill");
+    if (resultsFill) {
+      const resultsDonut = document.getElementById("donut");
+      const resultsProgress = createResultsProgressController(
+        resultsFill,
+        document.getElementById("results-pass-rate-pct"),
+        resultsDonut,
+        resultsDonut.querySelector(".donut-pct")
+      );
+      resultsProgress.setTarget(resultsFill.dataset.target, resultsDonut.dataset.failTarget);
+    }
+
     // Theme persistence
     (function() {
       var saved = localStorage.getItem("qa-theme") || "dark";

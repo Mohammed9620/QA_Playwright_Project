@@ -17,16 +17,16 @@
     :root,
     [data-theme="dark"] {
       /* ── Shadcn-inspired Zinc palette ── */
-      --bg-primary:     #09090b;
-      --bg-secondary:   #0a0a0a;
-      --bg-tertiary:    #171717;
-      --bg-elevated:    #1c1c1c;
-      --border-default: #27272a;
-      --border-muted:   #1c1c1c;
-      --text-primary:   #fafafa;
-      --text-secondary: #a1a1aa;
-      --text-tertiary:  #71717a;
-      --accent-blue:    #3b82f6;
+      --bg-primary:     #0d0814;
+      --bg-secondary:   #120b1c;
+      --bg-tertiary:    #181023;
+      --bg-elevated:    #20152c;
+      --border-default: #32243f;
+      --border-muted:   #24192f;
+      --text-primary:   #f2edf5;
+      --text-secondary: #a79cae;
+      --text-tertiary:  #75697f;
+      --accent-blue:    #9b6ac4;
       --success:        #22c55e;
       --success-muted:  rgba(34,197,94,0.15);
       --danger:         #ef4444;
@@ -46,21 +46,21 @@
       /* ── Ring & glow tokens ── */
       --glow-warning:   rgba(234,179,8,0.3);
       /* ── Glassmorphism ── */
-      --glass-bg:       rgba(10,10,10,0.75);
+      --glass-bg:       rgba(16,10,24,0.88);
       color-scheme: dark;
     }
 
     [data-theme="light"] {
-      --bg-primary:     #ffffff;
-      --bg-secondary:   #fafafa;
-      --bg-tertiary:    #f4f4f5;
-      --bg-elevated:    #e4e4e7;
-      --border-default: #e4e4e7;
-      --border-muted:   #f4f4f5;
-      --text-primary:   #09090b;
-      --text-secondary: #52525b;
-      --text-tertiary:  #71717a;
-      --accent-blue:    #2563eb;
+      --bg-primary:     #faf8fc;
+      --bg-secondary:   #ffffff;
+      --bg-tertiary:    #f1ebf5;
+      --bg-elevated:    #e7ddec;
+      --border-default: #d9cde0;
+      --border-muted:   #eee7f2;
+      --text-primary:   #211629;
+      --text-secondary: #5f5268;
+      --text-tertiary:  #7d6f86;
+      --accent-blue:    #74479b;
       --success:        #16a34a;
       --success-muted:  rgba(22,163,74,0.1);
       --danger:         #dc2626;
@@ -69,7 +69,7 @@
       --warning-muted:  rgba(202,138,4,0.1);
       --overlay:        rgba(0,0,0,0.2);
       --glow-warning:   rgba(202,138,4,0.2);
-      --glass-bg:       rgba(250,250,250,0.75);
+      --glass-bg:       rgba(250,248,252,0.88);
       color-scheme: light;
     }
 
@@ -399,6 +399,42 @@
       line-height: 1.4;
     }
 
+    /* Localized pointer-direction border treatment for selected QA surfaces. */
+    .directional-glow {
+      --glow-angle: 0deg;
+      --glow-opacity: 0;
+      position: relative;
+      isolation: isolate;
+    }
+    .directional-glow::after {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      padding: 1px;
+      border-radius: inherit;
+      pointer-events: none;
+      z-index: 5;
+      opacity: var(--glow-opacity);
+      background: conic-gradient(
+        from var(--glow-angle),
+        transparent 0deg 310deg,
+        rgba(128,79,158,0.12) 322deg,
+        rgba(190,148,211,0.78) 338deg,
+        rgba(151,99,183,0.46) 352deg,
+        transparent 360deg
+      );
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      will-change: opacity, background;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .directional-glow::after { filter: saturate(0.78); }
+    }
+    @media (hover: none), (pointer: coarse), (max-width: 768px) {
+      .directional-glow::after { display: none; }
+    }
+
     /* ── Flat Nested Auth Fields ── */
     .auth-fields {
       overflow: hidden;
@@ -500,38 +536,117 @@
     .error-banner.visible { display: flex; }
     .error-banner svg { flex-shrink: 0; margin-top: 1px; }
 
-    /* Run button (Solid, technical control button) */
+    /* Run Scan primary action: animated Void Purple shell around a stable control. */
+    .run-button-shell {
+      --edge-angle: 0deg;
+      position: relative;
+      width: 100%;
+      margin-top: 24px;
+      padding: 4px;
+      border-radius: calc(var(--radius-sm) + 4px);
+      overflow: hidden;
+      isolation: isolate;
+      background: #120b1c;
+      box-shadow: 0 5px 18px rgba(7, 3, 11, 0.28);
+      transition: box-shadow var(--transition), transform 140ms ease;
+    }
+    .run-shell-layer,
+    .run-shell-grain,
+    .run-shell-edge {
+      position: absolute;
+      pointer-events: none;
+    }
+    .run-shell-layer {
+      width: 72%;
+      height: 280%;
+      left: 14%;
+      top: -90%;
+      border-radius: 50%;
+      will-change: transform;
+    }
+    .run-shell-layer.layer-one {
+      background: radial-gradient(circle, rgba(155,106,196,0.9) 0%, rgba(89,48,119,0.58) 38%, transparent 72%);
+    }
+    .run-shell-layer.layer-two {
+      background: radial-gradient(circle, rgba(122,79,163,0.82) 0%, rgba(63,32,83,0.5) 42%, transparent 74%);
+    }
+    .run-shell-layer.layer-three {
+      background: radial-gradient(circle, rgba(181,138,209,0.58) 0%, rgba(82,43,105,0.42) 36%, transparent 70%);
+    }
+    .run-shell-grain {
+      inset: 0;
+      opacity: 0.16;
+      background-image:
+        repeating-radial-gradient(circle at 18% 34%, rgba(255,255,255,0.22) 0 0.45px, transparent 0.7px 3px),
+        repeating-radial-gradient(circle at 76% 68%, rgba(0,0,0,0.28) 0 0.5px, transparent 0.8px 4px);
+      mix-blend-mode: soft-light;
+      z-index: 2;
+    }
+    .run-shell-edge {
+      inset: 0;
+      padding: 1px;
+      border-radius: inherit;
+      background: conic-gradient(from var(--edge-angle), transparent 0 76%, rgba(224,204,235,0.78) 82%, rgba(155,106,196,0.28) 88%, transparent 94%);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0.76;
+      z-index: 3;
+    }
+    .run-button-shell:hover {
+      box-shadow: 0 7px 22px rgba(31, 14, 43, 0.42);
+    }
+    .run-button-shell:active {
+      transform: translateY(1px) scale(0.998);
+    }
     .btn-run {
       width: 100%;
       padding: 10px 16px;
-      border: 1px solid transparent;
+      border: 1px solid rgba(205,180,220,0.08);
       border-radius: var(--radius-sm);
-      background: var(--success);
-      color: #ffffff;
+      background: #181023;
+      color: #f2edf5;
       font-family: var(--font);
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      transition: background var(--transition);
+      transition: background var(--transition), border-color var(--transition), transform 140ms ease;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      margin-top: 24px;
       position: relative;
+      z-index: 4;
     }
     .btn-run:hover:not(:disabled) {
-      background: #16a34a;
+      background: #20152c;
+      border-color: rgba(205,180,220,0.16);
     }
     .btn-run:active:not(:disabled) {
-      background: #15803d;
+      transform: translateY(1px);
+      background: #150d1f;
+    }
+    .btn-run:focus-visible {
+      outline: 2px solid #c39bdd;
+      outline-offset: 2px;
     }
     .btn-run:disabled {
-      opacity: 0.6;
       cursor: not-allowed;
     }
+    .run-button-shell.testing {
+      background: #241a0c;
+      box-shadow: 0 5px 18px rgba(60, 43, 8, 0.24);
+    }
+    .run-button-shell.testing .run-shell-layer {
+      filter: sepia(0.8) saturate(1.25);
+      opacity: 0.66;
+    }
+    .run-button-shell.testing .run-shell-edge {
+      opacity: 0.46;
+    }
     .btn-run.testing {
-      background: var(--warning);
+      background: #7c5a0a;
+      border-color: rgba(234,179,8,0.38);
     }
     .btn-run .btn-spinner {
       display: none;
@@ -545,7 +660,12 @@
     }
     .btn-run.testing .btn-spinner { display: block; }
     .btn-run.testing:hover:not(:disabled) {
-      background: #ca8a04;
+      background: #8d680d;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .run-button-shell { transition-duration: 280ms; }
+      .run-shell-layer { opacity: 0.78; }
+      .run-shell-edge { opacity: 0.52; }
     }
 
     /* ── Timeline Section (Flat console list) ── */
@@ -602,6 +722,52 @@
       border-color: rgba(239,68,68,0.3);
       border-left: 3px solid var(--danger);
     }
+    /* Circuit flow overrides the existing timeline list without changing badge semantics. */
+    .timeline {
+      padding: 12px;
+      overflow: hidden;
+      border-radius: var(--radius-md);
+      background-image: linear-gradient(rgba(155,106,196,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(155,106,196,0.035) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    .timeline-item { width: 46%; margin-bottom: 0; z-index: 2; transition: border-color 0.3s, background 0.3s; }
+    .timeline-item.lane-left { margin-right: auto; }
+    .timeline-item.lane-right { margin-left: auto; }
+    .timeline-item::before {
+      display: block; content: ""; position: absolute; top: 50%; width: 5px; height: 5px;
+      border-radius: 1px; background: var(--border-default); transform: translateY(-50%) rotate(45deg);
+    }
+    .timeline-item.lane-left::before { right: -3px; }
+    .timeline-item.lane-right::before { left: -3px; }
+    .timeline-item.running::before { background: var(--warning); }
+    .timeline-item.passed::before { background: var(--success); }
+    .timeline-item.failed::before, .timeline-item.error::before, .timeline-item.timeout::before { background: var(--danger); }
+    .timeline-item.circuit-endpoint .timeline-label { font-family: var(--mono); letter-spacing: 0.02em; }
+    .circuit-trace { height: 42px; width: 100%; position: relative; color: var(--border-default); z-index: 1; }
+    .circuit-trace svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    .circuit-trace .trace-base, .circuit-trace .trace-signal { fill: none; stroke: currentColor; stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+    .circuit-trace .trace-signal { opacity: 0; stroke-width: 2.2; stroke-linecap: square; stroke-dasharray: 8 92; }
+    .circuit-trace.queued .trace-base { opacity: 0.62; stroke-dasharray: 2 4; }
+    .circuit-trace.running { color: var(--warning); }
+    .circuit-trace.running .trace-base { opacity: 0.42; }
+    .circuit-trace.running .trace-signal { opacity: 1; filter: drop-shadow(0 0 3px rgba(234,179,8,0.55)); animation: circuit-signal 1.35s linear infinite; }
+    .circuit-trace.passed { color: var(--success); }
+    .circuit-trace.failed, .circuit-trace.error, .circuit-trace.timeout { color: var(--danger); }
+    .circuit-trace-mobile { display: none !important; }
+    @keyframes circuit-signal { to { stroke-dashoffset: -100; } }
+    @media (prefers-reduced-motion: reduce) {
+      .circuit-trace.running .trace-signal { animation-duration: 2.4s; opacity: 0.72; filter: drop-shadow(0 0 1px rgba(234,179,8,0.35)); }
+    }
+    @media (max-width: 768px) {
+      .timeline { padding: 10px 4px; background-size: 16px 16px; }
+      .timeline-item { width: 100%; }
+      .timeline-item.lane-left, .timeline-item.lane-right { margin-left: 0; margin-right: 0; }
+      .timeline-item::before { left: 50% !important; right: auto !important; top: auto; bottom: -3px; transform: translateX(-50%) rotate(45deg); }
+      .circuit-trace { height: 34px; }
+      .circuit-trace-desktop { display: none !important; }
+      .circuit-trace-mobile { display: block !important; }
+    }
+
     .timeline-item-top {
       display: flex;
       align-items: center;
@@ -723,12 +889,31 @@
       overflow: hidden;
     }
     .pass-rate-fill {
+      position: relative;
+      width: 100%;
       height: 100%;
       border-radius: 3px;
-      transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+      transform: scaleX(0);
+      transform-origin: left center;
+      will-change: transform;
     }
-    .pass-rate-fill.good { background: var(--success); }
-    .pass-rate-fill.bad { background: var(--danger); }
+    .pass-rate-fill::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 10px;
+      height: 100%;
+      border-radius: inherit;
+      background: rgba(255,255,255,0.62);
+      box-shadow: 0 0 7px currentColor;
+      opacity: 0.72;
+    }
+    .pass-rate-fill.good { background: var(--success); color: var(--success); }
+    .pass-rate-fill.bad { background: var(--danger); color: var(--danger); }
+    @media (prefers-reduced-motion: reduce) {
+      .pass-rate-fill::after { opacity: 0.38; box-shadow: 0 0 3px currentColor; }
+    }
 
     .completion-actions {
       display: flex;
@@ -1011,7 +1196,37 @@
     @media (max-width: 1000px) {
       .log-panel { width: 380px; }
     }
+    /* Interaction polish: preserve glow, progress, circuit, and noise systems. */
+    .theme-toggle, .strategy-card, .btn-run, .btn-action, .log-clear-btn, .topbar a {
+      transition: background-color 180ms ease-out, border-color 180ms ease-out,
+                  color 180ms ease-out, opacity 180ms ease-out,
+                  box-shadow 180ms ease-out, filter 180ms ease-out,
+                  transform 160ms ease-out;
+    }
+    .strategy-card:active, .theme-toggle:active, .btn-action:active,
+    .log-clear-btn:active, .topbar a:active { transform: translateY(1px); }
+    .strategy-card:focus-within, .theme-toggle:focus-visible, .btn-action:focus-visible,
+    .log-clear-btn:focus-visible, .topbar a:focus-visible {
+      outline: 2px solid var(--accent-blue); outline-offset: 2px;
+    }
+    .strategy-card input[type="radio"]:focus-visible ~ .strategy-card-title { color: var(--accent-blue); }
+    .strategy-card.selected { box-shadow: inset 0 0 0 1px rgba(155,106,196,.12); }
+    .strategy-card.selected .strategy-card-title { color: var(--text-primary); }
+    .btn-run:disabled { opacity: .68; filter: saturate(.82); }
+    .btn-action:disabled, .log-clear-btn:disabled { cursor: not-allowed; opacity: .55; }
+    .topbar a:hover { color: var(--text-primary) !important; }
+    @media (prefers-reduced-motion: reduce) {
+      .theme-toggle, .strategy-card, .btn-run, .btn-action, .log-clear-btn, .topbar a { transition-duration: 160ms; }
+      .strategy-card:active, .theme-toggle:active, .btn-action:active,
+      .log-clear-btn:active, .topbar a:active, .btn-run:active:not(:disabled) { transform: none; filter: brightness(.94); }
+    }
+
     @media (max-width: 768px) {
+      .topbar { padding: 0 10px; gap: 8px; }
+      .topbar-version,
+      .topbar-status { display: none; }
+      .topbar-brand { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+      .theme-toggle { flex: 0 0 32px; }
       .main-layout {
         flex-direction: column;
       }
@@ -1087,13 +1302,13 @@
             <div class="strategy-group">
               <span class="strategy-label">Scan Strategy</span>
               <div class="strategy-cards">
-                <label class="strategy-card selected" id="card-external">
+                <label class="strategy-card directional-glow selected" id="card-external">
                   <input type="radio" name="scan_strategy" value="external" checked>
                   <svg class="strategy-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
                   <span class="strategy-card-title">External Scan</span>
                   <span class="strategy-card-desc">Black-box. URL only.</span>
                 </label>
-                <label class="strategy-card" id="card-authenticated">
+                <label class="strategy-card directional-glow" id="card-authenticated">
                   <input type="radio" name="scan_strategy" value="authenticated">
                   <svg class="strategy-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
                   <span class="strategy-card-title">Authenticated Scan</span>
@@ -1104,7 +1319,7 @@
 
             <!-- Auth Credential Fields (hidden by default, animated reveal) -->
             <div class="auth-fields" id="auth-fields">
-              <div class="auth-fields-inner">
+              <div class="auth-fields-inner directional-glow">
                 <div class="auth-fields-title">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                   Authentication Credentials
@@ -1158,10 +1373,17 @@
               <span id="js-error-text"></span>
             </div>
 
-            <button type="submit" class="btn-run" id="submit-btn">
-              <span class="btn-spinner" id="btn-spinner"></span>
-              <span id="btn-text">Run Scan</span>
-            </button>
+            <div class="run-button-shell" id="run-button-shell">
+              <span class="run-shell-layer layer-one" aria-hidden="true"></span>
+              <span class="run-shell-layer layer-two" aria-hidden="true"></span>
+              <span class="run-shell-layer layer-three" aria-hidden="true"></span>
+              <span class="run-shell-grain" aria-hidden="true"></span>
+              <span class="run-shell-edge" aria-hidden="true"></span>
+              <button type="submit" class="btn-run" id="submit-btn">
+                <span class="btn-spinner" id="btn-spinner"></span>
+                <span id="btn-text">Run Scan</span>
+              </button>
+            </div>
           </form>
         </div>
 
@@ -1176,7 +1398,7 @@
 
         <!-- Completion Summary (shown after scan) -->
         <div class="completion-section" id="completion-section">
-          <div class="completion-card">
+          <div class="completion-card directional-glow">
             <div class="completion-status" id="completion-status"></div>
             <div class="stat-row" id="stat-row">
               <div class="stat-box">
@@ -1202,7 +1424,7 @@
                 <span id="pass-rate-pct">0%</span>
               </div>
               <div class="pass-rate-track">
-                <div class="pass-rate-fill good" id="pass-rate-fill" style="width: 0%"></div>
+                <div class="pass-rate-fill good" id="pass-rate-fill"></div>
               </div>
             </div>
             <div class="completion-actions" id="completion-actions"></div>
@@ -1365,6 +1587,7 @@
     // ── DOM References ───────────────────────────────────────────
     const form         = document.getElementById("scan-form");
     const submitBtn    = document.getElementById("submit-btn");
+    const runBtnShell  = document.getElementById("run-button-shell");
     const btnText      = document.getElementById("btn-text");
     const btnSpinner   = document.getElementById("btn-spinner");
     const jsError      = document.getElementById("js-error");
@@ -1388,6 +1611,205 @@
     let scanTimer = null;
     let scanStartTime = null;
 
+    function createProgressController(fillEl, textEl) {
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+      let displayed = 0;
+      let target = 0;
+      let animationFrame = null;
+      let lastTime = 0;
+
+      function render() {
+        const bounded = Math.max(0, Math.min(100, displayed));
+        fillEl.style.transform = `scaleX(${bounded / 100})`;
+        textEl.textContent = `${Math.round(bounded)}%`;
+        fillEl.setAttribute("aria-valuenow", String(Math.round(bounded)));
+      }
+
+      function tick(now) {
+        const delta = Math.min(64, lastTime ? now - lastTime : 16.67);
+        lastTime = now;
+        const response = reducedMotion.matches ? 20 : 8;
+        const blend = 1 - Math.exp(-response * delta / 1000);
+        displayed += (target - displayed) * blend;
+
+        if (Math.abs(target - displayed) < 0.04) {
+          displayed = target;
+          render();
+          animationFrame = null;
+          lastTime = 0;
+          return;
+        }
+
+        render();
+        animationFrame = requestAnimationFrame(tick);
+      }
+
+      function setTarget(value, immediate = false) {
+        target = Math.max(0, Math.min(100, Number(value) || 0));
+        if (immediate) {
+          if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+          animationFrame = null;
+          lastTime = 0;
+          displayed = target;
+          render();
+          return;
+        }
+        if (animationFrame === null) animationFrame = requestAnimationFrame(tick);
+      }
+
+      fillEl.updateProgress = setTarget;
+      window.addEventListener("pagehide", () => {
+        if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+      }, { once: true });
+      render();
+      return { setTarget, getDisplayed: () => displayed, getTarget: () => target };
+    }
+
+    const completionProgress = createProgressController(
+      document.getElementById("pass-rate-fill"),
+      document.getElementById("pass-rate-pct")
+    );
+
+    (function initDirectionalGlows() {
+      const disabled = window.matchMedia("(hover: none), (pointer: coarse), (max-width: 768px)");
+      if (disabled.matches) return;
+
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+      const elements = Array.from(document.querySelectorAll(".directional-glow"));
+      const states = elements.map(element => ({
+        element,
+        rect: null,
+        angle: 0,
+        targetAngle: 0,
+        opacity: 0,
+        targetOpacity: 0,
+      }));
+      let pointerX = -1000;
+      let pointerY = -1000;
+      let animationFrame = null;
+
+      function refreshRects() {
+        states.forEach(state => {
+          const rect = state.element.getBoundingClientRect();
+          state.rect = rect.width && rect.height ? rect : null;
+        });
+      }
+
+      function updateTargets() {
+        const proximity = 72;
+        const intensity = reducedMotion.matches ? 0.34 : 0.58;
+        states.forEach(state => {
+          const rect = state.rect;
+          if (!rect) {
+            state.targetOpacity = 0;
+            return;
+          }
+          const dx = Math.max(rect.left - pointerX, 0, pointerX - rect.right);
+          const dy = Math.max(rect.top - pointerY, 0, pointerY - rect.bottom);
+          const distance = Math.hypot(dx, dy);
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          state.targetAngle = Math.atan2(pointerY - centerY, pointerX - centerX) * 180 / Math.PI + 90;
+          state.targetOpacity = distance < proximity
+            ? intensity * (1 - distance / proximity)
+            : 0;
+        });
+      }
+
+      function animate() {
+        const smoothing = reducedMotion.matches ? 0.28 : 0.16;
+        let unsettled = false;
+        states.forEach(state => {
+          let angleDelta = ((state.targetAngle - state.angle + 540) % 360) - 180;
+          if (reducedMotion.matches) angleDelta = Math.max(-22, Math.min(22, angleDelta));
+          state.angle += angleDelta * smoothing;
+          state.opacity += (state.targetOpacity - state.opacity) * smoothing;
+          if (Math.abs(angleDelta) > 0.12 || Math.abs(state.targetOpacity - state.opacity) > 0.004) {
+            unsettled = true;
+          } else {
+            state.angle = state.targetAngle;
+            state.opacity = state.targetOpacity;
+          }
+          state.element.style.setProperty("--glow-angle", `${state.angle}deg`);
+          state.element.style.setProperty("--glow-opacity", state.opacity.toFixed(3));
+        });
+        animationFrame = unsettled ? requestAnimationFrame(animate) : null;
+      }
+
+      function requestGlowFrame() {
+        if (animationFrame === null) animationFrame = requestAnimationFrame(animate);
+      }
+
+      document.addEventListener("pointermove", event => {
+        pointerX = event.clientX;
+        pointerY = event.clientY;
+        updateTargets();
+        requestGlowFrame();
+      }, { passive: true });
+
+      const resizeObserver = new ResizeObserver(() => {
+        refreshRects();
+        updateTargets();
+        requestGlowFrame();
+      });
+      elements.forEach(element => resizeObserver.observe(element));
+      window.addEventListener("resize", refreshRects, { passive: true });
+      window.addEventListener("scroll", refreshRects, { passive: true });
+      window.addEventListener("pagehide", () => {
+        if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+        resizeObserver.disconnect();
+      }, { once: true });
+      refreshRects();
+    })();
+
+    // One shared animation loop drives all three shell layers and the edge highlight.
+    (function initRunButtonShell() {
+      const layers = Array.from(runBtnShell.querySelectorAll(".run-shell-layer"));
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+      let animationFrame = null;
+      let startTime = performance.now();
+
+      function animateShell(now) {
+        const elapsed = (now - startTime) / 1000;
+        const reduced = reducedMotion.matches;
+        const travel = reduced ? 2.5 : 7;
+        const speed = reduced ? 0.48 : 1;
+
+        const positions = [
+          [Math.sin(elapsed * 0.31 * speed) * travel, Math.cos(elapsed * 0.23 * speed) * travel * 0.62],
+          [Math.cos(elapsed * 0.19 * speed + 1.7) * travel * 0.82, Math.sin(elapsed * 0.29 * speed) * travel * 0.7],
+          [Math.sin(elapsed * 0.25 * speed + 3.1) * travel * 0.68, Math.cos(elapsed * 0.17 * speed) * travel * 0.78],
+        ];
+
+        layers.forEach((layer, index) => {
+          const [x, y] = positions[index];
+          layer.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0)`;
+        });
+        runBtnShell.style.setProperty("--edge-angle", `${(elapsed * (reduced ? 7 : 13)) % 360}deg`);
+        animationFrame = requestAnimationFrame(animateShell);
+      }
+
+      function startShellAnimation() {
+        if (animationFrame !== null) return;
+        startTime = performance.now();
+        animationFrame = requestAnimationFrame(animateShell);
+      }
+
+      function stopShellAnimation() {
+        if (animationFrame === null) return;
+        cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+      }
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) stopShellAnimation();
+        else startShellAnimation();
+      });
+      window.addEventListener("pagehide", stopShellAnimation, { once: true });
+      startShellAnimation();
+    })();
+
     // ── Error Helpers ────────────────────────────────────────────
     function showError(msg) {
       jsErrorText.textContent = msg;
@@ -1403,11 +1825,13 @@
       if (loading) {
         btnText.textContent = "Testing...";
         submitBtn.classList.add("testing");
+        runBtnShell.classList.add("testing");
         statusDot.className = "status-dot running";
         footerDot.className = "status-dot running";
       } else {
         btnText.textContent = "Run Scan";
         submitBtn.classList.remove("testing");
+        runBtnShell.classList.remove("testing");
       }
     }
 
@@ -1506,19 +1930,63 @@
     }
 
     // ── Timeline ─────────────────────────────────────────────────
-    function addTimelineItem(file, label) {
-      const id = "tl-" + file.replace(/[^a-z0-9]/gi, "_");
+    function createCircuitNode(id, label, detail, index, endpoint = false) {
       const div = document.createElement("div");
-      div.className = "timeline-item waiting";
+      div.className = `timeline-item waiting ${index % 2 === 0 ? "lane-left" : "lane-right"}${endpoint ? " circuit-endpoint" : ""}`;
       div.id = id;
       div.innerHTML = `
         <div class="timeline-item-top">
           <span class="timeline-label">${label} <span class="timeline-duration"></span></span>
           <span class="timeline-badge waiting">Queued</span>
         </div>
-        <div class="timeline-detail"><span class="timeline-detail-stats">${file}</span></div>
+        <div class="timeline-detail"><span class="timeline-detail-stats">${detail}</span></div>
       `;
       timeline.appendChild(div);
+    }
+
+    function addCircuitTrace(index, fromLeft) {
+      const trace = document.createElement("div");
+      trace.className = "circuit-trace queued";
+      trace.id = `circuit-trace-${index}`;
+      const desktopPath = fromLeft ? "M46 0 V21 H54 V42" : "M54 0 V21 H46 V42";
+      trace.innerHTML = `
+        <svg class="circuit-trace-desktop" viewBox="0 0 100 42" preserveAspectRatio="none" aria-hidden="true">
+          <path class="trace-base" d="${desktopPath}" pathLength="100"></path>
+          <path class="trace-signal" d="${desktopPath}" pathLength="100"></path>
+        </svg>
+        <svg class="circuit-trace-mobile" viewBox="0 0 100 34" preserveAspectRatio="none" aria-hidden="true">
+          <path class="trace-base" d="M50 0 V34" pathLength="100"></path>
+          <path class="trace-signal" d="M50 0 V34" pathLength="100"></path>
+        </svg>
+      `;
+      timeline.appendChild(trace);
+    }
+
+    function buildCircuitFlow(files) {
+      createCircuitNode("circuit-start", "Scan Start", "Execution initialized", 0, true);
+      files.forEach(({ file, label }, index) => {
+        addCircuitTrace(index, index % 2 === 0);
+        createCircuitNode("tl-" + file.replace(/[^a-z0-9]/gi, "_"), label, file, index + 1);
+      });
+      addCircuitTrace(files.length, files.length % 2 === 0);
+      createCircuitNode("circuit-final", "Final Result", "Awaiting scan outcome", files.length + 1, true);
+      setCircuitNodeState("circuit-start", "passed", "Started");
+      setCircuitTraceState(0, "running");
+    }
+
+    function setCircuitNodeState(id, status, badgeText) {
+      const item = document.getElementById(id);
+      if (!item) return;
+      item.classList.remove("waiting", "running", "passed", "failed", "error", "timeout");
+      item.classList.add(status);
+      const badge = item.querySelector(".timeline-badge");
+      badge.className = `timeline-badge ${status}`;
+      badge.textContent = badgeText;
+    }
+
+    function setCircuitTraceState(index, status) {
+      const trace = document.getElementById(`circuit-trace-${index}`);
+      if (trace) trace.className = `circuit-trace ${status}`;
     }
 
     function updateTimelineItem(file, status, passed, failed, elapsedS) {
@@ -1527,7 +1995,8 @@
       if (!item) return;
 
       const badgeLabel = { passed: "Passed", failed: "Failed", timeout: "Timeout", error: "Error" };
-      item.className = `timeline-item ${status}`;
+      item.classList.remove("waiting", "running", "passed", "failed", "timeout", "error");
+      item.classList.add(status);
 
       const badge = item.querySelector(".timeline-badge");
       badge.className = `timeline-badge ${status}`;
@@ -1554,7 +2023,8 @@
       const id = "tl-" + file.replace(/[^a-z0-9]/gi, "_");
       const item = document.getElementById(id);
       if (!item) return;
-      item.className = "timeline-item running";
+      item.classList.remove("waiting", "passed", "failed", "timeout", "error");
+      item.classList.add("running");
       const badge = item.querySelector(".timeline-badge");
       badge.className = "timeline-badge running";
       badge.textContent = "Running";
@@ -1580,6 +2050,7 @@
       if (!url) { showError("Please enter a target URL."); return; }
 
       // Reset UI
+      completionProgress.setTarget(0);
       timeline.innerHTML = "";
       timelineSec.classList.remove("visible");
       completionSec.classList.remove("visible");
@@ -1629,8 +2100,8 @@
         }
 
         if (data.type === "start") {
-          data.files.forEach(({ file, label }) => {
-            addTimelineItem(file, label);
+          buildCircuitFlow(data.files);
+          data.files.forEach(({ file }) => {
             pendingFiles.push(file);
           });
           timelineSec.classList.add("visible");
@@ -1651,6 +2122,10 @@
           updateTimelineItem(data.file, data.status, data.passed, data.failed, data.elapsed_s);
 
           const idx = pendingFiles.indexOf(data.file);
+          if (idx !== -1) {
+            setCircuitTraceState(idx, data.status);
+            setCircuitTraceState(idx + 1, "running");
+          }
           if (idx !== -1 && idx + 1 < pendingFiles.length) {
             const nextFile = pendingFiles[idx + 1];
             markTimelineRunning(nextFile);
@@ -1670,6 +2145,11 @@
 
           const s = data.summary;
           const allOk = s.failed === 0 && s.error === 0;
+          const finalState = allOk ? "passed" : "failed";
+          setCircuitTraceState(pendingFiles.length, finalState);
+          setCircuitNodeState("circuit-final", finalState, allOk ? "Passed" : "Failed");
+          const finalDetail = document.querySelector("#circuit-final .timeline-detail-stats");
+          if (finalDetail) finalDetail.textContent = `${s.passed} passed · ${s.failed} failed · ${s.error} errors`;
 
           // Update status
           statusDot.className = "status-dot active";
@@ -1685,10 +2165,12 @@
           document.getElementById("stat-errors").textContent = s.error;
 
           const pct = s.total > 0 ? Math.round((s.passed / s.total) * 100) : 0;
-          document.getElementById("pass-rate-pct").textContent = pct + "%";
           const fill = document.getElementById("pass-rate-fill");
-          fill.style.width = pct + "%";
           fill.className = `pass-rate-fill ${pct >= 80 ? "good" : "bad"}`;
+          fill.setAttribute("role", "progressbar");
+          fill.setAttribute("aria-valuemin", "0");
+          fill.setAttribute("aria-valuemax", "100");
+          completionProgress.setTarget(pct);
 
           // Build action buttons
           const actionsDiv = document.getElementById("completion-actions");
