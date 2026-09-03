@@ -330,8 +330,24 @@
       .login-mascot { display: none; }
     }
 
+    /* ── Entrance Animations ── */
+    .topbar { animation: fade-in var(--duration-slow) var(--ease-out) both; }
+    .login-brand { animation: fade-in var(--duration-slow) var(--ease-out) 60ms both; }
+    .login-surface { animation: fade-in var(--duration-slow) var(--ease-out) 120ms both; }
+    .tabs-container { animation: fade-in var(--duration-slow) var(--ease-out) 180ms both; }
+    #form-section-title { animation: fade-in var(--duration-slow) var(--ease-out) 220ms both; }
+    .form-group:nth-of-type(1) { animation: fade-in var(--duration-slow) var(--ease-out) 260ms both; }
+    .form-group:nth-of-type(2) { animation: fade-in var(--duration-slow) var(--ease-out) 300ms both; }
+    .btn-login { animation: fade-in var(--duration-slow) var(--ease-out) 340ms both; }
+    .login-back { animation: fade-in var(--duration-slow) var(--ease-out) 400ms both; }
+
     /* ── Reduced motion (page-specific) ── */
     @media (prefers-reduced-motion: reduce) {
+      .topbar, .login-brand, .login-surface, .tabs-container, #form-section-title, .form-group, .btn-login, .login-back {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+      }
       .tab-btn, .btn-login, .tab-indicator {
         transition-duration: var(--duration-fast);
       }
