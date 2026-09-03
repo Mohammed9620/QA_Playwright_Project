@@ -80,36 +80,48 @@
 
     /* ── Segmented Tab Controls ── */
     .tabs-container {
+      position: relative;
       display: flex;
-      gap: 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: 4px;
       margin-bottom: 24px;
       justify-content: center;
     }
+    .tab-indicator {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      left: 0;
+      background: var(--accent-blue);
+      border-radius: calc(var(--radius-md) - 4px);
+      transition: transform var(--duration-normal) var(--ease-out),
+                  width var(--duration-normal) var(--ease-out);
+      z-index: 1;
+      pointer-events: none;
+    }
     .tab-btn {
+      flex: 1;
+      position: relative;
+      z-index: 2;
       padding: 10px 20px;
-      border: 1px solid var(--border-default);
-      background-color: transparent;
-      color: var(--text-tertiary);
+      border: none;
+      background-color: transparent !important;
+      color: var(--text-secondary);
       cursor: pointer;
-      border-radius: 6px;
-      font-size: 14px;
+      border-radius: calc(var(--radius-md) - 4px);
+      font-size: 13px;
       font-weight: 500;
       font-family: var(--font);
-      /* P1.8: explicit properties instead of transition: all */
-      transition: background-color var(--duration-normal) var(--ease-out),
-                  color var(--duration-normal) var(--ease-out),
-                  border-color var(--duration-normal) var(--ease-out),
+      transition: color var(--duration-normal) var(--ease-out),
                   transform var(--duration-fast) var(--ease-out);
     }
     .tab-btn:hover:not(.active) {
-      background-color: var(--bg-tertiary);
-      color: var(--text-secondary);
-      border-color: var(--text-tertiary);
+      color: var(--text-primary);
     }
     .tab-btn.active {
-      background-color: var(--accent-blue) !important;
       color: #ffffff !important;
-      border-color: var(--accent-blue) !important;
       font-weight: 600;
     }
     /* P2.1: scale feedback */
@@ -320,7 +332,7 @@
 
     /* ── Reduced motion (page-specific) ── */
     @media (prefers-reduced-motion: reduce) {
-      .tab-btn, .btn-login {
+      .tab-btn, .btn-login, .tab-indicator {
         transition-duration: var(--duration-fast);
       }
       .tab-btn:active, .btn-login:active {
@@ -369,6 +381,7 @@
       <div class="login-surface">
         <!-- Role Tabs -->
         <div class="tabs-container">
+          <div class="tab-indicator" id="tab-indicator"></div>
           <button type="button" class="tab-btn active" id="user-tab">Login as User</button>
           <button type="button" class="tab-btn" id="admin-tab">Login as Admin</button>
         </div>
@@ -607,7 +620,16 @@
 
     function switchTab(role) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(role + '-tab').classList.add('active');
+        const activeBtn = document.getElementById(role + '-tab');
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+
+            const indicator = document.getElementById('tab-indicator');
+            if (indicator) {
+                indicator.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
+                indicator.style.width = `${activeBtn.offsetWidth}px`;
+            }
+        }
         
         const usernameInput = document.querySelector('input[name="username"]');
         document.getElementById('role-hidden-input').value = role;
@@ -618,6 +640,16 @@
             if (usernameInput) usernameInput.placeholder = 'Username or Email';
         }
     }
+
+    // Ensure the indicator is positioned correctly on load and resize
+    window.addEventListener('load', () => {
+        const activeRole = document.getElementById('role-hidden-input').value || 'user';
+        switchTab(activeRole);
+    });
+    window.addEventListener('resize', () => {
+        const activeRole = document.getElementById('role-hidden-input').value || 'user';
+        switchTab(activeRole);
+    });
 
     // Attach event listeners to tabs
     document.getElementById('user-tab').addEventListener('click', () => switchTab('user'));
