@@ -271,15 +271,15 @@
     }
     .run-shell-layer {
       position: absolute;
-      inset: -4px;
+      inset: -3px;
       border-radius: calc(var(--radius-sm) + 4px);
-      filter: blur(12px);
+      filter: blur(10px);
       opacity: 0;
       z-index: -2;
       will-change: transform, opacity;
       transition: opacity 800ms var(--ease-out);
     }
-    .run-button-shell.testing .run-shell-layer { opacity: 0.65; }
+    .run-button-shell.testing .run-shell-layer { opacity: 0.38; }
     .run-shell-layer.layer-one   { background: radial-gradient(circle at 30% 50%, var(--accent-blue), transparent 60%); }
     .run-shell-layer.layer-two   { background: radial-gradient(circle at 70% 30%, #5b21b6, transparent 65%); }
     .run-shell-layer.layer-three { background: radial-gradient(circle at 50% 80%, #7c3aed, transparent 70%); }
