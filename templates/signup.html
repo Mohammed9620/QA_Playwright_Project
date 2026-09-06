@@ -113,7 +113,7 @@
             <line x1="22" y1="11" x2="16" y2="11"/>
           </svg>
         </div>
-        <span class="signup-brand-title">Create Account</span>
+        <h1 class="signup-brand-title">Create Account</h1>
         <span class="signup-brand-sub">Register a new User Profile</span>
       </div>
 
@@ -129,20 +129,20 @@
         
         <!-- Step Titles -->
         {% if step == 'email' %}
-          <div class="card-section-title">
+          <h2 class="card-section-title">
             <span>Step 1: Contact Details</span>
             <span class="card-step-label">Email Verify</span>
-          </div>
+          </h2>
         {% elif step == 'verify_otp' %}
-          <div class="card-section-title">
+          <h2 class="card-section-title">
             <span>Step 2: Security Validation</span>
             <span class="card-step-label">OTP Verification</span>
-          </div>
+          </h2>
         {% elif step == 'register' %}
-          <div class="card-section-title">
+          <h2 class="card-section-title">
             <span>Step 3: Setup Account</span>
             <span class="card-step-label">Credentials</span>
-          </div>
+          </h2>
         {% endif %}
 
         <!-- Error & Info Banners -->
