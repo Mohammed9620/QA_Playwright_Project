@@ -1148,6 +1148,7 @@
           Execution Log
           <span class="log-count" id="log-count">0</span>
         </div>
+        <span style="font-family:var(--mono);font-size:12px;color:var(--text-tertiary);" id="footer-timer"></span>
         <button class="log-clear-btn" id="log-clear-btn">Clear</button>
       </div>
       <div class="log-body" id="log-body">
@@ -1167,7 +1168,6 @@
       <span id="footer-text">Ready</span>
     </div>
     <div class="footer-spacer"></div>
-    <span style="font-family:var(--mono);" id="footer-timer"></span>
   </footer>
 
   <!-- ════════════════════════════════════════════════════════════
@@ -1199,31 +1199,42 @@
       let isDragging = false;
       let startX = 0;
       let startWidth = 0;
+      let activePointerId = null;
 
-      splitter.addEventListener("mousedown", (e) => {
+      splitter.addEventListener("pointerdown", (e) => {
+        if (isDragging) return;
         isDragging = true;
+        activePointerId = e.pointerId;
         startX = e.clientX;
         startWidth = logPanel.offsetWidth;
+
+        splitter.setPointerCapture(activePointerId);
         splitter.classList.add("dragging");
+
         document.body.style.cursor = "col-resize";
         document.body.style.userSelect = "none";
         e.preventDefault();
       });
 
-      document.addEventListener("mousemove", (e) => {
-        if (!isDragging) return;
+      splitter.addEventListener("pointermove", (e) => {
+        if (!isDragging || e.pointerId !== activePointerId) return;
         const delta = startX - e.clientX;
         const newWidth = Math.min(700, Math.max(200, startWidth + delta));
         logPanel.style.width = newWidth + "px";
       });
 
-      document.addEventListener("mouseup", () => {
-        if (!isDragging) return;
+      function stopDrag(e) {
+        if (!isDragging || e.pointerId !== activePointerId) return;
         isDragging = false;
+        activePointerId = null;
+        splitter.releasePointerCapture(e.pointerId);
         splitter.classList.remove("dragging");
         document.body.style.cursor = "";
         document.body.style.userSelect = "";
-      });
+      }
+
+      splitter.addEventListener("pointerup", stopDrag);
+      splitter.addEventListener("pointercancel", stopDrag);
     })();
 
     // ══════════════════════════════════════════════════════════════
