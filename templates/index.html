@@ -193,7 +193,6 @@
     .strategy-card:focus-within { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
 
     /* ── Auth Fields ── */
-    /* ── Auth Fields ── */
     .auth-fields {
       display: grid;
       grid-template-rows: 0fr;
@@ -473,7 +472,9 @@
       position: relative;
       z-index: 2;
       width: 80%;
-      transition: all var(--duration-normal) var(--ease-out);
+      transition: border-color var(--duration-normal) var(--ease-out),
+                  box-shadow var(--duration-normal) var(--ease-out),
+                  background-color var(--duration-normal) var(--ease-out);
       animation: fade-in var(--duration-normal) var(--ease-out) both;
       animation-delay: calc(var(--stagger-idx, 0) * 70ms);
     }
