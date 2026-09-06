@@ -219,16 +219,16 @@
             </button>
           </form>
 
-          <form method="POST" action="/signup" style="margin-top: 16px; text-align: center;">
+          <form method="POST" action="/signup" class="mt-4 text-center">
             <input type="hidden" name="action" value="send_otp">
             <input type="hidden" name="email" value="{{ email }}">
-            <span style="font-size: 12px; color: var(--text-tertiary)">Didn't get the code? </span>
+            <span class="text-xs text-tertiary">Didn't get the code? </span>
             <button type="submit" class="btn-link">Resend OTP</button>
           </form>
 
-          <form method="POST" action="/signup" style="margin-top: 8px; text-align: center;">
+          <form method="POST" action="/signup" class="mt-2 text-center">
             <input type="hidden" name="action" value="restart">
-            <button type="submit" class="btn-link" style="color: var(--text-tertiary)">Use different email</button>
+            <button type="submit" class="btn-link text-tertiary">Use different email</button>
           </form>
 
         {% elif step == 'register' %}
@@ -237,7 +237,7 @@
             
             <div class="field">
               <label class="field-label">Verified Email</label>
-              <input class="field-input" type="text" value="{{ email }}" disabled style="opacity: 0.6; cursor: not-allowed;">
+              <input class="field-input" type="text" value="{{ email }}" disabled>
             </div>
 
             <div class="field">

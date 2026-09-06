@@ -282,6 +282,10 @@ body {
   border-color: var(--accent-blue);
   box-shadow: 0 0 0 2px rgba(155,106,196,0.18);
 }
+.field-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 .field-info {
   font-size: 11px;
   color: var(--text-tertiary);
@@ -507,3 +511,23 @@ body {
     to   { opacity: 1; }
   }
 }
+/* ── Inline Style Cleanup Utilities ── */
+.topbar-nav-link {
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  margin-right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.topbar-nav-link.primary { color: var(--accent-blue); }
+.topbar-nav-link.secondary { color: var(--text-secondary); }
+.topbar-nav-link.dashboard { color: inherit; margin-right: 0; }
+
+.mt-1 { margin-top: 4px; }
+.mt-2 { margin-top: 8px; }
+.mt-4 { margin-top: 16px; }
+.text-center { text-align: center; }
+.text-tertiary { color: var(--text-tertiary); }
+.text-xs { font-size: 12px; }
