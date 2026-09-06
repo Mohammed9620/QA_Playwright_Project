@@ -160,6 +160,13 @@ body {
   letter-spacing: 0.02em;
 }
 .topbar-spacer { flex: 1; }
+.topbar-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
 
 /* ── Status Dot (topbar + footer) ── */
 .status-dot {
