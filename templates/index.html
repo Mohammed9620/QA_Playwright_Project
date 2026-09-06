@@ -559,6 +559,24 @@
       margin-top: 24px;
     }
     .completion-section.visible { display: block; }
+
+    .completion-section.visible .completion-status {
+      animation: fade-in var(--duration-normal) var(--ease-out) both;
+      animation-delay: 0ms;
+    }
+    .completion-section.visible .stat-row {
+      animation: fade-in var(--duration-normal) var(--ease-out) both;
+      animation-delay: 50ms;
+    }
+    .completion-section.visible .pass-rate-wrap {
+      animation: fade-in var(--duration-normal) var(--ease-out) both;
+      animation-delay: 100ms;
+    }
+    .completion-section.visible .completion-actions {
+      animation: fade-in var(--duration-normal) var(--ease-out) both;
+      animation-delay: 150ms;
+    }
+
     .completion-card {
       background: var(--bg-secondary);
       border: 1px solid var(--border-default);
@@ -910,6 +928,14 @@
       .log-clear-btn:active, .btn-run:active:not(:disabled) { transform: none; filter: brightness(.94); }
       .auth-fields, .auth-fields.visible, .auth-fields-inner { transition-duration: 0.01s !important; transform: none !important; }
       .timeline-item { animation-name: fade-in-simple; animation-delay: 0ms; }
+
+      .completion-section.visible .completion-status,
+      .completion-section.visible .stat-row,
+      .completion-section.visible .pass-rate-wrap,
+      .completion-section.visible .completion-actions {
+        animation-name: fade-in-simple;
+        animation-delay: 0ms;
+      }
     }
     @keyframes fade-in-simple {
       from { opacity: 0; }
