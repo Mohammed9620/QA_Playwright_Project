@@ -913,7 +913,7 @@ span.skipped, .skipped .col-result, span.xfailed, .xfailed .col-result { color: 
 .collapsible td:not(.col-links):hover::after { color: var(--r-text-muted) !important; }
 .col-result:hover::after, .col-result.collapsed:hover::after { font-size: 11px !important; color: var(--r-text-muted) !important; }
 #environment-header h2:hover::after, #environment-header.collapsed h2:hover::after { color: var(--r-text-muted) !important; font-size: 11px !important; }
-/* Theme toggle button */
+/* Theme toggle button — hidden when inside iframe; parent dashboard owns the toggle */
 .report-theme-toggle { position: fixed; top: 16px; right: 16px; z-index: 9999; background: var(--r-surface); border: 1px solid var(--r-border); color: var(--r-text-muted); width: 36px; height: 36px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.2s; }
 .report-theme-toggle:hover { color: var(--r-text); border-color: var(--r-text-muted); }
 
@@ -983,6 +983,8 @@ a:hover { color:var(--r-text) !important; }
 .logwrapper { margin-top:8px; border-radius:6px !important; }
 .logwrapper .log { max-height:420px; overflow:auto; line-height:1.55; }
 .report-theme-toggle { position:absolute; top:41px; right:max(32px,calc((100vw - 1280px)/2 + 32px)); width:34px; height:34px; border-radius:6px; transition:color 160ms ease,border-color 160ms ease,background 160ms ease; }
+/* Hide the report-level toggle when rendered inside an iframe — the parent dashboard toggle is authoritative */
+.report-theme-toggle.iframe-hidden { display:none !important; }
 .report-theme-toggle:focus-visible { outline:2px solid var(--r-accent); outline-offset:2px; }
 /* Refined report-control feedback; native pytest-html handlers stay untouched. */
 .report-theme-toggle,.collapse button,.filter-chip span,.logwrapper .logexpander {
@@ -1047,6 +1049,8 @@ a:hover { color:var(--r-text) !important; }
         btn.setAttribute("aria-label", "Toggle report theme");
         btn.innerHTML = saved === "dark" ? "☀️" : "🌙";
         btn.title = "Toggle theme";
+        // Auto-hide toggle when embedded in an iframe (parent dashboard owns the toggle)
+        try { if (window.self !== window.top) btn.classList.add("iframe-hidden"); } catch(e) { btn.classList.add("iframe-hidden"); }
         btn.onclick = function() {
             var current = document.documentElement.getAttribute("data-theme");
             var next = current === "dark" ? "light" : "dark";

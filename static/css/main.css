@@ -28,8 +28,8 @@
   --text-tertiary:  #75697f;
 
   /* Accent */
-  --accent-blue:    #9b6ac4;
-  --accent-purple:  #b58ad1;
+  --accent-blue:    #4a2878;
+  --accent-purple:  #5c3495;
 
   /* Status */
   --success:        #22c55e;
@@ -41,7 +41,7 @@
 
   /* Effects */
   --overlay:        rgba(0,0,0,0.6);
-  --ring:           rgba(155,106,196,0.32);
+  --ring:           rgba(74,40,120,0.36);
   --glow-warning:   rgba(234,179,8,0.3);
   --glow-success:   rgba(34,197,94,0.3);
   --glow-danger:    rgba(239,68,68,0.3);
@@ -118,6 +118,12 @@ body {
   transition: background var(--transition), color var(--transition);
 }
 
+/* Smoke background — html+body become transparent when WebGL canvas is present */
+html:has(#smoke-bg),
+body:has(#smoke-bg) {
+  background: transparent !important;
+}
+
 /* ════════════════════════════════════════════════════════════
    TOPBAR
    ════════════════════════════════════════════════════════════ */
@@ -179,7 +185,7 @@ body {
 .status-dot.active { background: var(--success); }
 .status-dot.running {
   background: var(--warning);
-  animation: breathing-glow 2s ease-in-out infinite;
+  animation: breathing-glow 30s ease-in-out infinite;
   box-shadow: 0 0 8px var(--glow-warning);
 }
 
