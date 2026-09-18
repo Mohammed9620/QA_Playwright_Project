@@ -1,7 +1,112 @@
+# ==============================================================================
+# Git Ignore Configuration - Enterprise QA Automation Framework
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Secrets & Environment Configurations
+# ------------------------------------------------------------------------------
 .env
-.venv/
+.env.*
+!.env.example
+
+# ------------------------------------------------------------------------------
+# Python & Bytecode
+# ------------------------------------------------------------------------------
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ------------------------------------------------------------------------------
+# Virtual Environments
+# ------------------------------------------------------------------------------
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# ------------------------------------------------------------------------------
+# Testing & Code Coverage
+# ------------------------------------------------------------------------------
 .pytest_cache/
-*.pyc
-users.db
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.tox/
+.nox/
+
+# ------------------------------------------------------------------------------
+# Test Reports & Execution Artifacts
+# ------------------------------------------------------------------------------
+reports/
 report.html
+*.html
+!templates/*.html
+allure-results/
+allure-report/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# ------------------------------------------------------------------------------
+# Test Media, Traces & Logs
+# ------------------------------------------------------------------------------
+screenshots/
+videos/
+traces/
+*.log
+logs/
+
+# ------------------------------------------------------------------------------
+# Databases & Persistence Stores
+# ------------------------------------------------------------------------------
+*.db
+*.sqlite
+*.sqlite3
+users.db
+
+# ------------------------------------------------------------------------------
+# Operating System & Editor Artifacts
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# IDE files
+.idea/
+.vscode/*
+!.vscode/settings.json
+*.sublime-project
+*.sublime-workspace

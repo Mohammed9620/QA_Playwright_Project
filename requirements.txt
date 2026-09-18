@@ -1,0 +1,23 @@
+# ==============================================================================
+# Enterprise QA Automation Framework - Python Dependencies
+# ==============================================================================
+
+# Core Automation & Browser Drivers
+playwright>=1.40.0
+
+# Testing Engine & Assertions
+pytest>=7.4.0
+pytest-html>=4.1.0
+pytest-metadata>=3.1.0
+
+# HTTP & API Automation
+requests>=2.31.0
+
+# Environment & Settings Management
+python-dotenv>=1.0.0
+
+# Syntax Highlighting & Formatting
+pygments>=2.17.0
+
+# Web Dashboard & Execution Server
+Flask>=3.0.0

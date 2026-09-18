@@ -1,29 +1,38 @@
 """
-init_db.py
-──────────
-Recreates the users and otp_store database tables for the OTP security system.
+Database Initialization Module
+──────────────────────────────
+Initializes the SQLite schema for user role management and OTP authentication.
+Credentials and configuration are pulled securely from environment variables.
 
 Usage:
     python init_db.py
 """
 
-import sqlite3
 import os
+import sqlite3
+from dotenv import load_dotenv
 
-# ── Config ────────────────────────────────────────────────────────────────────
-DB_PATH = os.path.join(os.path.dirname(__file__), "users.db")
+# Load environment configuration
+load_dotenv()
 
-# ── Default seed admin ────────────────────────────────────────────────────────
-DEFAULT_EMAIL = "admin@test.com"
-DEFAULT_USERNAME = "admin"
-DEFAULT_PASSWORD = "password123"
-DEFAULT_ROLE = "admin"
+DB_PATH = os.environ.get(
+    "DATABASE_PATH",
+    os.path.join(os.path.dirname(__file__), "users.db")
+)
 
-def init_db():
+# Admin seed configuration sourced securely from environment variables
+DEFAULT_EMAIL = os.environ.get("ADMIN_DEFAULT_EMAIL", "admin@test.com")
+DEFAULT_USERNAME = os.environ.get("ADMIN_DEFAULT_USERNAME", "admin")
+DEFAULT_PASSWORD = os.environ.get("ADMIN_DEFAULT_PASSWORD", "AdminPassword123!Secure")
+DEFAULT_ROLE = os.environ.get("ADMIN_DEFAULT_ROLE", "admin")
+
+
+def init_db() -> None:
+    """Creates the necessary database tables and seeds the initial administrator account."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    # Drop existing tables to refresh schema
+    # Drop existing tables to refresh schema cleanly
     cursor.execute("DROP TABLE IF EXISTS users")
     cursor.execute("DROP TABLE IF EXISTS otp_store")
 
@@ -47,7 +56,7 @@ def init_db():
         )
     """)
 
-    # Insert default admin user
+    # Insert initial administrator user
     cursor.execute(
         "INSERT INTO users (email, username, password, role) VALUES (?, ?, ?, ?)",
         (DEFAULT_EMAIL, DEFAULT_USERNAME, DEFAULT_PASSWORD, DEFAULT_ROLE),
@@ -56,8 +65,8 @@ def init_db():
     conn.commit()
     conn.close()
 
-    print("[init_db] Database reset ready at: " + DB_PATH)
-    print(f"[init_db] Admin seeded: {DEFAULT_USERNAME} / {DEFAULT_EMAIL}")
+    print(f"[INFO] Database initialized at: {DB_PATH}")
+    print(f"[INFO] Default administrator account seeded: '{DEFAULT_USERNAME}' <{DEFAULT_EMAIL}>")
 
 
 if __name__ == "__main__":

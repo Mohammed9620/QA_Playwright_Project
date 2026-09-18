@@ -1,4 +1,5 @@
 import os
+import sys
 import re
 import json
 import sqlite3
@@ -14,7 +15,7 @@ from datetime import datetime, timedelta, timezone
 from flask import Flask, render_template, request, send_file, Response, jsonify, session, redirect, url_for
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-production")
+app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(32).hex()
 app.config['SESSION_PERMANENT'] = False
 
 @app.before_request
@@ -44,15 +45,15 @@ def check_session_timeout():
 #  Scan type → pytest file mapping
 # ──────────────────────────────────────────────
 SCAN_MAP = {
-    "login":      [("main_test.py",       "Login Test")],
-    "bruteforce": [("test_credentials.py","Credential Bruteforce Probe")],
-    "api":        [("test_api.py",        "API Health Check")],
-    "auth":       [("test_auth.py",       "Broken Authentication Check")],
+    "login":      [("tests/test_login.py",       "Login Test")],
+    "bruteforce": [("tests/test_credentials.py", "Credential Bruteforce Probe")],
+    "api":        [("tests/test_api.py",         "API Health Check")],
+    "auth":       [("tests/test_auth.py",        "Broken Authentication Check")],
     "full": [
-        ("main_test.py",        "Login Test"),
-        ("test_credentials.py", "Credential Bruteforce Probe"),
-        ("test_api.py",         "API Health Check"),
-        ("test_auth.py",        "Broken Authentication Check"),
+        ("tests/test_login.py",       "Login Test"),
+        ("tests/test_credentials.py", "Credential Bruteforce Probe"),
+        ("tests/test_api.py",         "API Health Check"),
+        ("tests/test_auth.py",        "Broken Authentication Check"),
     ],
 }
 
@@ -65,7 +66,8 @@ SCAN_LABELS = {
 }
 
 
-REPORT_PATH = os.path.join(os.path.dirname(__file__), "report.html")
+REPORT_PATH = os.path.join(os.path.dirname(__file__), "reports", "report.html")
+os.makedirs(os.path.dirname(REPORT_PATH), exist_ok=True)
 
 # In-memory store for finished scan results keyed by session id
 _scan_results: dict[str, dict] = {}
@@ -652,7 +654,7 @@ def stream_scan():
             }) + "\n\n"
 
             # Build command — only attach the HTML reporter on the last file
-            cmd = ["python", "-m", "pytest", test_file, "-v", "-s"]
+            cmd = [sys.executable, "-m", "pytest", test_file, "-v", "-s"]
             if is_last:
                 cmd += [f"--html={REPORT_PATH}", "--self-contained-html"]
 
